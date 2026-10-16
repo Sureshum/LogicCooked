@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogicCooked 3D! - Arcade de Conjuntos y Lógica Proposicional</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="vendor/icon.svg" type="image/svg+xml">
+    <script src="vendor/tailwind.min.js"></script>
+    <script src="vendor/three.min.js"></script>
+    <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="vendor/fonts/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css?v=21">
+
+</head>
+
+<body class="flex flex-col justify-between h-screen w-screen overflow-hidden">
+
+    <!-- HIDDEN YOUTUBE PLAYER: música de fondo (20%) -->
+    <div id="yt-bg-player" aria-hidden="true"
+        style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;overflow:hidden;"></div>
+
+    <!-- LANDING SCREEN / MENU PRINCIPAL -->
+    <div id="landing-screen" class="landing-screen">
+        <div class="pixel-art-bg cozy-bg">
+            <div class="cozy-sky"></div>
+            <div class="cozy-clouds">
+                <div class="cloud cloud-1"></div>
+                <div class="cloud cloud-2"></div>
+                <div class="cloud cloud-3"></div>
+                <div class="cloud cloud-4"></div>
+            </div>
+            <div class="cozy-mountains">
+                <div class="mountain mtn-1"></div>
+                <div class="mountain mtn-2"></div>
+                <div class="mountain mtn-3"></div>
+                <div class="mountain mtn-back"></div>
+            </div>
+            <div class="cozy-hills"></div>
+            <div class="cozy-grass"></div>
+            <div class="cozy-grass-blades"></div>
+            <div class="campfire">
+                <div class="campfire-logs"></div>
+                <div class="campfire-flame flame-a"></div>
+                <div class="campfire-flame flame-b"></div>
+                <div class="campfire-flame flame-c"></div>
+                <div class="campfire-core"></div>
+                <div class="campfire-embers">
+                    <span class="ember ember-1"></span>
+                    <span class="ember ember-2"></span>
+                    <span class="ember ember-3"></span>
+                    <span class="ember ember-4"></span>
+                    <span class="ember ember-5"></span>
+                </div>
+                <div class="campfire-glow"></div>
+                <div class="campfire-smoke">
+                    <span class="smoke-cloud smoke-1"></span>
+                    <span class="smoke-cloud smoke-2"></span>
+                    <span class="smoke-cloud smoke-3"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CUERPO CELESTE (SOL/LUNA) ARRASTRABLE Y REACTIVO -->
+        <div id="celestial-body" class="celestial-body sun-sprite" style="display:none">
+            <div class="moon-crater crater-1" style="display: none;"></div>
+            <div class="moon-crater crater-2" style="display: none;"></div>
+            <div class="moon-crater crater-3" style="display: none;"></div>
+        </div>
+
+        <div class="landing-content">
+            <h1 class="game-title-landing">LogicCooked 3D</h1>
+            <p class="game-subtitle">
+                ¡Bienvenido al arcade de Conjuntos y Lógica Proposicional! 
+                Explora un patio libre y elige el desafío que quieras jugar.
+            </p>
+            <div id="username-container" class="flex flex-col items-center gap-3 mb-4 animate-[fadeInUp_1s_ease-out_0.9s_both]">
+                <input id="username-input" type="text" maxlength="12" placeholder="Escribe tu nombre"
+                    class="px-4 py-2 rounded-xl bg-slate-950/80 border border-amber-500/40 text-center text-sm font-bold text-white placeholder-slate-400 shadow-inner focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/40 transition w-60"
+                    spellcheck="false" autocomplete="off">
+                <p class="text-[10px] text-slate-400">Tu nombre aparecerá en el Top 10 de cada juego</p>
+            </div>
+            <button id="start-btn" class="start-button" disabled>
+                <i class="fa-solid fa-play mr-2"></i>
+                ENTRAR A ZONA DE JUEGOS
+            </button>
+            <div class="social-buttons">
+                <a href="mailto:ssshum25@gmail.com" class="social-button email" title="Escríbeme: ssshum25@gmail.com">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>Contacto</span>
+                </a>
+                <a href="https://github.com/Sureshum" target="_blank" rel="noopener noreferrer"
+                    class="social-button github" title="Mi perfil de GitHub">
+                    <i class="fa-brands fa-github"></i>
+                    <span>GitHub</span>
+                </a>
+            </div>
+        </div>
+
+        <div id="drag-hint" class="drag-hint" style="display:none">
+            <i class="fa-solid fa-hand-pointer mr-2"></i>
+            Arrastra el Sol/Luna a la izquierda para más sol y a la derecha para más noche
+        </div>
+    </div>
+
+    <!-- 3D WEBGL CANVAS -->
+    <div id="webgl-container"></div>
+
+    <!-- 3D FLOATING LABELS OVERLAY -->
+    <div id="labels-container"></div>
+
+    <!-- CENTER FPS CROSSHAIR -->
+    <div id="fps-crosshair" class="fixed inset-0 pointer-events-none z-15 hidden">
+        <div id="crosshair-reticle" class="absolute w-9 h-9 flex items-center justify-center opacity-85"
+            style="left:50%; top:50%; transform: translate(-50%, -50%)">
+            <div class="absolute w-full h-0.5 bg-rose-400/80"></div>
+            <div class="absolute h-full w-0.5 bg-rose-400/80"></div>
+            <div class="w-3 h-3 rounded-full border-2 border-amber-300"></div>
+        </div>
+    </div>
+
+    <!-- CENTER-SCREEN HIT FEEDBACK (COD-style) -->
+    <div id="hit-feedback" class="fixed inset-0 pointer-events-none z-40 flex items-center justify-center overflow-hidden"></div>
+
+    <!-- ULTRA-COMPACT TOP HUD BAR -->
+    <header class="hud-layer w-full px-3 pt-2 flex flex-col items-center gap-1.5">
+        <div
+            class="max-w-7xl w-full glass-panel rounded-2xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shadow-xl">
+            <!-- Brand + Mode Switcher -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-2 pr-1">
+                    <div
+                        class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow">
+                        <i class="fa-solid fa-cube text-slate-950 text-xs"></i>
+                    </div>
+                    <span
+                        class="text-sm font-extrabold tracking-tight bg-gradient-to-r from-amber-300 to-rose-400 bg-clip-text text-transparent hidden sm:inline">
+                        LogicCooked 3D
+                    </span>
+                </div>
+
+                <div
+                    class="hud-interactive flex items-center gap-1 bg-slate-950/85 p-1 rounded-xl border border-slate-800">
+                    <button onclick="switchGameMode('hub')" id="btn-mode-hub"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 bg-lime-500 text-slate-950 shadow">
+                        <i class="fa-solid fa-tree"></i>
+                        <span>0. Patio</span>
+                    </button>
+                    <button onclick="switchGameMode('overcooked')" id="btn-mode-overcooked"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-kitchen-set"></i>
+                        <span>1. Cocina</span>
+                    </button>
+                    <button onclick="switchGameMode('aim')" id="btn-mode-aim"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-crosshairs text-rose-400"></i>
+                        <span>2. Aim 3D</span>
+                    </button>
+                    <button onclick="switchGameMode('connect')" id="btn-mode-connect"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-plug-circle-bolt text-emerald-400"></i>
+                        <span>3. Conecta</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Static Mode Indicator -->
+            <div class="flex items-center gap-2 bg-slate-950/95 border border-slate-700/80 rounded-xl px-3.5 py-1">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Modo Activo:</span>
+                <span id="static-mode-badge"
+                    class="text-xs font-extrabold uppercase tracking-wide text-amber-300 mono-font">
+                    COCINA 3D • CONJUNTOS
+                </span>
+            </div>
+
+            <!-- Right Stats & Modals -->
+            <div class="hud-interactive flex items-center gap-1.5 flex-wrap">
+                <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1"
+                    title="Nombre para el Top 10">
+                    <i class="fa-solid fa-user-astronaut text-indigo-400 text-[10px]"></i>
+                    <span id="playerNameDisplay" class="text-[11px] font-bold text-white max-w-[7rem] truncate">Chef3D</span>
+                </div>
+
+                <div
+                    class="flex items-center gap-2 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-0.5 text-xs mono-font">
+                    <span title="Puntuación"><strong id="hud-score" class="text-amber-400">0</strong> <small
+                            class="text-[9px] text-slate-400">pts</small></span>
+                    <span class="text-slate-700">|</span>
+                    <span id="hud-streak" class="text-emerald-400 font-bold" title="Racha">x1</span>
+                    <span class="text-slate-700">|</span>
+                    <span id="hud-timer" class="text-cyan-300 font-bold" title="Tiempo">120s</span>
+                </div>
+
+                <button onclick="toggleLeaderboardDrawer()"
+                    class="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span>Top 10</span>
+                </button>
+
+                <button onclick="toggleAudio()" id="btn-audio"
+                    class="w-7 h-7 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-amber-400 transition">
+                    <i id="icon-audio" class="fa-solid fa-volume-high text-[11px]"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Row 2: Patio Quick Actions -->
+        <div id="hub-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden flex-wrap items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-tree mr-1 text-lime-300"></i>Patio de Juegos</span>
+            <span class="text-slate-400">Camina con WASD y pulsa <kbd class="px-1.5 py-0.5 bg-lime-500 text-slate-950 rounded font-extrabold">E</kbd> en una zona para entrar</span>
+        </div>
+
+        <!-- Row 2: Kitchen Quick Actions -->
+        <div id="kitchen-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 flex flex-wrap items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-gauge-high mr-1 text-amber-300"></i>Dificultad:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setKitchenDifficulty('easy')" id="btn-diff-easy"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-emerald-500 text-slate-950">Fácil</button>
+                <button onclick="setKitchenDifficulty('normal')" id="btn-diff-normal"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Normal</button>
+                <button onclick="setKitchenDifficulty('hard')" id="btn-diff-hard"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-regular fa-clock mr-1 text-cyan-300"></i>Tiempo:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setKitchenRoundTime(60)" id="btn-time-60"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">60s</button>
+                <button onclick="setKitchenRoundTime(120)" id="btn-time-120"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-cyan-500 text-slate-950">120s</button>
+                <button onclick="setKitchenRoundTime(180)" id="btn-time-180"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">180s</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold">Plato en Mesa:</span>
+            <span id="hud-plate-set"
+                class="mono-font font-extrabold text-emerald-400 bg-slate-950 px-2.5 py-0.5 rounded-md border border-slate-800 text-xs">{
+                ∅ }</span>
+            <button onclick="interactWithNearestStation()" id="btn-interact-e"
+                class="px-2.5 py-0.5 rounded-md bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold mono-font text-[11px] transition shadow">
+                [E] Interactuar
+            </button>
+        </div>
+
+        <!-- Row 2 Alternative: Aim Quick Actions -->
+        <div id="aim-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-gauge-high mr-1 text-rose-300"></i>Dificultad:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setAimDifficulty('easy')" id="btn-aim-easy"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-emerald-500 text-slate-950">Fácil</button>
+                <button onclick="setAimDifficulty('normal')" id="btn-aim-normal"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Normal</button>
+                <button onclick="setAimDifficulty('hard')" id="btn-aim-hard"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+            <span class="text-rose-300 font-semibold"><i class="fa-solid fa-crosshairs mr-1"></i> Dispara la respuesta correcta</span>
+        </div>
+
+        <!-- Row 2 Alternative: Connect Quick Actions -->
+        <div id="connect-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-emerald-300 font-semibold"><i class="fa-solid fa-plug-circle-bolt mr-1"></i> Enlaza cada
+                expresión (Izq) con su equivalencia formal (Der)</span>
+            <button onclick="triggerNewChallenge()"
+                class="px-2.5 py-0.5 rounded-md bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-[11px] transition shadow flex items-center gap-1">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Nuevos Nodos</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- FLOATING ORDER TICKET AT BOTTOM-RIGHT -->
+    <aside id="mission-ticket-card"
+        class="fixed top-24 right-4 z-30 hud-interactive w-80 sm:w-[27rem] order-ticket-card rounded-2xl overflow-hidden">
+        <div id="ticket-header-strip"
+            class="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i id="ticket-icon" class="fa-solid fa-receipt text-slate-950 text-sm"></i>
+                <span id="mission-tag" class="text-xs font-extrabold uppercase tracking-wider text-slate-950">
+                    COMANDA #01 • CONJUNTOS
+                </span>
+            </div>
+            <button onclick="triggerNewChallenge()"
+                class="text-sm text-slate-950 hover:bg-black/15 px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1"
+                title="Cambiar Orden">
+                <i class="fa-solid fa-rotate"></i>
+                <span class="text-[11px]">Nueva</span>
+            </button>
+        </div>
+
+        <div class="p-4 space-y-2.5">
+            <div class="bg-slate-950/95 border border-slate-800 rounded-xl py-3.5 px-3 text-center shadow-inner">
+                <div class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mb-1"
+                    id="mission-subtitle-label">
+                    PREPARAR OPERACIÓN
+                </div>
+                <div id="mission-title"
+                    class="text-3xl sm:text-4xl font-extrabold text-amber-300 mono-font tracking-tight leading-tight">
+                    A ∪ B
+                </div>
+            </div>
+
+            <div id="mission-context"
+                class="bg-slate-900/90 border border-slate-800/80 rounded-xl px-3 py-2.5 text-sm sm:text-base mono-font flex flex-wrap items-center justify-center gap-2">
+            </div>
+
+            <p id="mission-desc" class="text-xs sm:text-sm text-slate-300 leading-snug">
+                Camina con WASD y pulsa [E] frente a una estación para tomar ingredientes o entregar.
+            </p>
+        </div>
+    </aside>
+
+    <!-- FOOTER CONSOLE (oculto: la validación se muestra en el feedback central) -->
+    <footer class="hud-layer w-full px-3 pb-2 hidden">
+        <div
+            class="max-w-7xl mx-auto glass-panel rounded-2xl px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-2 shadow-xl">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+                <span
+                    class="text-[10px] font-bold uppercase tracking-wider text-indigo-300 shrink-0 hidden sm:inline">Validación:</span>
+                <div id="validation-console"
+                    class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1 text-[11px] mono-font text-emerald-300 truncate flex-1">
+                    [MOTOR 3D LISTO] Usa WASD + [E] en la Cocina, apunta en Aim 3D o tiende cables lógicos.
+                </div>
+            </div>
+
+            <div class="hud-interactive flex items-center gap-3 text-[11px] shrink-0">
+                <span id="hud-controls-hint" class="text-slate-300 hidden md:inline mono-font">
+                    <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-amber-300">WASD</kbd> Mover •
+                    <kbd class="px-1.5 py-0.5 bg-amber-500 text-slate-950 font-bold rounded">E</kbd> Interactuar •
+                    <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-emerald-300">Espacio</kbd> Entregar
+                </span>
+                <span id="hud-accuracy-stats" class="mono-font text-slate-400">✔ 0 | ✖ 0</span>
+                <div id="mini-podium-list" class="hidden xl:flex items-center gap-1.5 mono-font text-[10px]"></div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LEADERBOARD MODAL -->
+    <div id="leaderboardModal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl max-w-md w-full p-6 border border-amber-500/30 shadow-2xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-trophy text-amber-400 text-xl"></i>
+                    <div>
+                        <h3 id="leaderboard-title" class="text-lg font-bold text-white">Clasificación Top 10</h3>
+                        <p id="leaderboard-subtitle" class="text-xs text-slate-400">Los 10 Mejores Arquitectos Lógicos en 3D</p>
+                    </div>
+                </div>
+                <button onclick="toggleLeaderboardDrawer()"
+                    class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div
+                class="grid grid-cols-3 gap-3 items-end pt-6 pb-3 px-3 my-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-medal text-slate-300 text-lg mb-1"></i>
+                    <span id="modal-p2-name" class="text-xs font-bold text-slate-200 truncate max-w-full">---</span>
+                    <span id="modal-p2-score" class="mono-font text-[11px] text-slate-400 mb-1">0</span>
+                    <div
+                        class="w-full h-16 bg-gradient-to-t from-slate-700 to-slate-400/70 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-lg">
+                        2°</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-crown text-amber-400 text-2xl mb-1 animate-bounce"></i>
+                    <span id="modal-p1-name" class="text-xs font-bold text-amber-300 truncate max-w-full">---</span>
+                    <span id="modal-p1-score" class="mono-font text-xs font-extrabold text-amber-400 mb-1">0</span>
+                    <div
+                        class="w-full h-24 bg-gradient-to-t from-amber-600 to-amber-300 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-2xl shadow-lg shadow-amber-500/30">
+                        1°</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-medal text-amber-700 text-lg mb-1"></i>
+                    <span id="modal-p3-name" class="text-xs font-bold text-amber-500 truncate max-w-full">---</span>
+                    <span id="modal-p3-score" class="mono-font text-[11px] text-slate-400 mb-1">0</span>
+                    <div
+                        class="w-full h-12 bg-gradient-to-t from-amber-900 to-amber-600/80 rounded-t-xl flex items-center justify-center font-extrabold text-white text-base">
+                        3°</div>
+                </div>
+            </div>
+
+            <div id="leaderboard-time-tabs" class="hidden items-center justify-center gap-2 mb-4">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Tiempo:</span>
+                <button onclick="setLeaderboardTimeView(60)" id="lb-tab-60"
+                    class="px-3 py-1 rounded-lg text-[11px] font-bold transition text-slate-300 hover:bg-slate-800">60s</button>
+                <button onclick="setLeaderboardTimeView(120)" id="lb-tab-120"
+                    class="px-3 py-1 rounded-lg text-[11px] font-bold transition bg-cyan-500 text-slate-950">120s</button>
+                <button onclick="setLeaderboardTimeView(180)" id="lb-tab-180"
+                    class="px-3 py-1 rounded-lg text-[11px] font-bold transition text-slate-300 hover:bg-slate-800">180s</button>
+            </div>
+
+            <div id="modal-leaderboard-rows" class="space-y-2 mb-4"></div>
+
+            <div class="flex justify-end gap-2">
+                <button onclick="savePlayerToLeaderboard()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> Registrar Mi Puntaje Actual
+                </button>
+                <button onclick="toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BIG BOTTOM-CENTER COUNTDOWN TIMER -->
+    <div id="big-timer"
+        class="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-none flex flex-col items-center gap-1.5">
+        <div id="big-timer-pill"
+            class="flex items-center gap-2.5 bg-slate-950/85 backdrop-blur border-2 border-cyan-500/50 rounded-2xl px-5 py-1.5 shadow-2xl">
+            <i class="fa-regular fa-clock text-cyan-300 text-xl"></i>
+            <span id="big-timer-value"
+                class="mono-font text-4xl font-extrabold text-cyan-300 tabular-nums leading-none">120</span>
+            <span class="text-xs text-slate-400 font-bold self-end mb-1">s</span>
+        </div>
+        <div class="w-44 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="big-timer-bar" class="h-full bg-cyan-400 rounded-full transition-[width] duration-1000 ease-linear"
+                style="width:100%"></div>
+        </div>
+    </div>
+
+    <!-- CROWD WARNING NOTIFICATION -->
+    <div id="crowd-warning"
+        class="fixed top-24 left-1/2 -translate-x-1/2 z-40 pointer-events-none hidden flex-col items-center gap-2">
+        <div
+            class="animate-pulse flex items-center gap-2.5 bg-red-950/90 border-2 border-red-500 rounded-2xl px-5 py-2 shadow-2xl">
+            <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+            <span id="crowd-warning-text"
+                class="mono-font text-red-200 font-extrabold text-sm sm:text-base tracking-wide">¡ATENCIÓN! VA A PASAR GENTE</span>
+        </div>
+    </div>
+
+    <!-- SKIN ROOM (VESTIDOR) SELECTOR -->
+    <div id="skin-panel"
+        class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 hidden flex-col items-center gap-2 pointer-events-none">
+        <span
+            class="bg-slate-950/90 border-2 border-fuchsia-500/60 rounded-2xl px-4 py-1.5 text-fuchsia-200 font-bold text-sm mono-font shadow-2xl">
+            <i class="fa-solid fa-shirt mr-1"></i> Vestidor — Elige tu skin
+        </span>
+        <div class="hud-interactive flex items-center gap-2 bg-slate-950/90 border-2 border-slate-700 rounded-2xl px-3 py-2 shadow-2xl">
+            <button onclick="applyChefSkin(0)" title="Clásico"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#f1f5f9"></button>
+            <button onclick="applyChefSkin(1)" title="Rojo"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#ef4444"></button>
+            <button onclick="applyChefSkin(2)" title="Verde"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#22c55e"></button>
+            <button onclick="applyChefSkin(3)" title="Púrpura"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#a855f7"></button>
+            <button onclick="applyChefSkin(4)" title="Chef Noir"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#1e293b"></button>
+            <button onclick="applyChefSkin(5)" title="Cian"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#06b6d4"></button>
+            <div class="w-px h-7 bg-slate-700 mx-1"></div>
+            <button id="skin-slot-67" onclick="applyChefSkin(6)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-oso" onclick="applyChefSkin(7)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-lobo" onclick="applyChefSkin(8)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-gato" onclick="applyChefSkin(9)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-tung" onclick="applyChefSkin(10)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+        </div>
+    </div>
+
+    <!-- HUB / PATIO INTERACTION PROMPT -->
+    <div id="hub-prompt"
+        class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 pointer-events-none hidden flex-col items-center gap-2">
+        <span id="hub-prompt-text"
+            class="bg-slate-950/90 border-2 border-lime-500/60 rounded-2xl px-5 py-2 text-lime-200 font-bold text-sm sm:text-base mono-font shadow-2xl">
+            <kbd class="px-1.5 py-0.5 bg-lime-500 text-slate-950 rounded font-extrabold">E</kbd> Entrar
+        </span>
+    </div>
+
+    <!-- PRESS-ANY-KEY TO START HINT -->
+    <div id="start-hint"
+        class="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none flex flex-col items-center gap-2.5">
+        <i id="start-hint-icon" class="fa-solid fa-keyboard text-amber-300 text-4xl animate-bounce"></i>
+        <span id="start-hint-text"
+            class="animate-pulse bg-slate-950/90 border-2 border-amber-500/50 rounded-2xl px-5 py-2 text-amber-300 font-bold text-sm sm:text-base mono-font shadow-2xl">
+            Presiona cualquier tecla para comenzar
+        </span>
+    </div>
+
+    <!-- KITCHEN GAME OVER MODAL -->
+    <div id="kitchen-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-cyan-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i class="fa-solid fa-hourglass-end text-cyan-300 text-4xl mb-3"></i>
+            <h3 class="text-xl font-extrabold text-white mono-font">¡TIEMPO AGOTADO!</h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Se terminó el turno en Cocina 3D.</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="gameover-best" class="mono-font text-2xl font-extrabold text-cyan-300">0 pts</p>
+                </div>
+            </div>
+            <p id="gameover-msg" class="text-xs text-slate-300 mb-5">Se registró tu puntaje en el Top 10.</p>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartKitchenGame()"
+                    class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeKitchenGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Top 10
+                </button>
+                <button onclick="closeKitchenGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AIM GAME OVER MODAL -->
+    <div id="aim-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-rose-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i class="fa-solid fa-hourglass-end text-rose-300 text-4xl mb-3"></i>
+            <h3 class="text-xl font-extrabold text-white mono-font">¡TIEMPO AGOTADO!</h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Se acabó la ronda en Rayo Lógico 3D.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="aim-gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="aim-gameover-best" class="mono-font text-2xl font-extrabold text-rose-300">0 pts</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Aciertos</p>
+                    <p id="aim-gameover-hits" class="mono-font text-lg font-extrabold text-emerald-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Fallos</p>
+                    <p id="aim-gameover-misses" class="mono-font text-lg font-extrabold text-rose-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Precisión</p>
+                    <p id="aim-gameover-acc" class="mono-font text-lg font-extrabold text-cyan-300">0%</p>
+                </div>
+            </div>
+            <p id="aim-gameover-msg" class="text-xs text-slate-300 mb-5">Se registró tu puntaje en el Top 10.</p>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartAimGame()"
+                    class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeAimGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Mi Top
+                </button>
+                <button onclick="closeAimGameOver()"
+                    class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs">
+                    <i class="fa-solid fa-sliders mr-1"></i> Cambiar Dificultad
+                </button>
+                <button onclick="closeAimGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONNECT GAME OVER MODAL -->
+    <div id="connect-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-emerald-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i class="fa-solid fa-hourglass-end text-emerald-300 text-4xl mb-3"></i>
+            <h3 class="text-xl font-extrabold text-white mono-font">¡TIEMPO AGOTADO!</h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Se acabó la ronda en Cables Lógicos 3D.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="connect-gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="connect-gameover-best" class="mono-font text-2xl font-extrabold text-emerald-300">0 pts</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Conexiones</p>
+                    <p id="connect-gameover-hits" class="mono-font text-lg font-extrabold text-emerald-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Errores</p>
+                    <p id="connect-gameover-misses" class="mono-font text-lg font-extrabold text-rose-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Precisión</p>
+                    <p id="connect-gameover-acc" class="mono-font text-lg font-extrabold text-cyan-300">0%</p>
+                </div>
+            </div>
+            <p id="connect-gameover-msg" class="text-xs text-slate-300 mb-5">Se registró tu puntaje en el Top 10.</p>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartConnectGame()"
+                    class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeConnectGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Mi Top
+                </button>
+                <button onclick="closeConnectGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME SCRIPTS -->
+    <script src="src/game.js?v=74"></script>
+    <script src="src/landing.js?v=65"></script>
+
+    <!-- OFFLINE / PWA: registra el service worker para jugar sin conexion -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function (err) {
+                    console.warn('No se pudo registrar el service worker:', err);
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
