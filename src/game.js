@@ -82,19 +82,29 @@
         let connectGameOver = false;
         let awaitingStart = true;
         const LEADERBOARD_LIMIT = 10;
-        const LEADERBOARD_DEFAULTS = {
-            overcooked: [
-                { name: 'Boole3D', score: 750, difficulty: 'hard' },
-                { name: 'AdaChef', score: 520, difficulty: 'normal' },
-                { name: 'DeMorgan', score: 340, difficulty: 'easy' }
-            ],
-            aim: [
-                { name: 'SniperLog', score: 840 }, { name: 'Axioma', score: 610 }, { name: 'Ray3D', score: 420 }
-            ],
-            connect: [
-                { name: 'CableKing', score: 900 }, { name: 'Equivalente', score: 700 }, { name: 'NodoPro', score: 460 }
-            ]
-        };
+        // Nombres y dificultades para generar 3 puntajes de ejemplo aleatorios
+        const LEADERBOARD_SEED_NAMES = [
+            'Boole3D', 'AdaChef', 'DeMorgan', 'SniperLog', 'Axioma', 'Ray3D',
+            'CableKing', 'Equivalente', 'NodoPro', 'VennMaster', 'Tautología',
+            'ModusPonens', 'Karnaught', 'Conjunta', 'BitWise', 'Álgebra',
+            'TuringChef', 'LógicaViva', 'Cuantor', 'Subconjunto'
+        ];
+        const LEADERBOARD_SEED_DIFFICULTIES = ['easy', 'normal', 'hard'];
+
+        // Genera 3 puntajes aleatorios (siempre por debajo de shum, para no quitarle el 1° puesto).
+        function randomDefaultLeaderboard(mode) {
+            const names = LEADERBOARD_SEED_NAMES.slice();
+            const picks = [];
+            for (let i = 0; i < 3; i++) {
+                const name = names.splice(Math.floor(Math.random() * names.length), 1)[0];
+                const entry = { name, score: 200 + Math.floor(Math.random() * 750) };
+                if (mode === 'overcooked') {
+                    entry.difficulty = LEADERBOARD_SEED_DIFFICULTIES[Math.floor(Math.random() * LEADERBOARD_SEED_DIFFICULTIES.length)];
+                }
+                picks.push(entry);
+            }
+            return picks.sort((a, b) => b.score - a.score);
+        }
         const MODE_LABELS = { overcooked: 'Cocina 3D', aim: 'Rayo Lógico', connect: 'Cables Lógicos' };
         const KITCHEN_TIMES = [60, 120, 180];
         const DIFFICULTY_LABELS = { easy: 'Fácil', normal: 'Normal', hard: 'Difícil' };
@@ -211,7 +221,7 @@
             const key = leaderboardKey(mode, time);
             const raw = localStorage.getItem(key);
             if (!raw) {
-                const list = withTopSeed((LEADERBOARD_DEFAULTS[mode] || []).map(p => ({ ...p })), mode);
+                const list = withTopSeed(randomDefaultLeaderboard(mode), mode);
                 localStorage.setItem(key, JSON.stringify(list));
                 return list;
             }
