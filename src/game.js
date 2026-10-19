@@ -1,8 +1,9 @@
         let soundEnabled = true;
+        let sfxEnabled = true;
         let audioCtx = null;
 
         // ---- Música de fondo (YouTube IFrame API, volumen 5%) ----
-        const bgMusic = { player: null, ready: false, started: false, videoId: 'odfBLx170k8', volume: 5 };
+        const bgMusic = { player: null, ready: false, started: false, videoId: 'odfBLx170k8', volume: 5, adminMuted: false };
 
         function startBackgroundMusic() {
             bgMusic.started = true;
@@ -11,12 +12,12 @@
 
         function resumeBackgroundMusic() {
             if (!bgMusic.player || !bgMusic.ready) return;
-            if (!bgMusic.started || !soundEnabled) return;
+            if (!bgMusic.started || !soundEnabled || bgMusic.adminMuted) return;
             try { bgMusic.player.playVideo(); } catch (e) { }
         }
 
         function playSFX(type) {
-            if (!soundEnabled) return;
+            if (!soundEnabled || !sfxEnabled) return;
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 const now = audioCtx.currentTime;
@@ -69,6 +70,10 @@
                     else bgMusic.player.pauseVideo();
                 } catch (e) { }
             }
+        }
+
+        function setSFXEnabled(enabled) {
+            sfxEnabled = !!enabled;
         }
 
         const modeScores = { overcooked: 0, aim: 0, connect: 0, millonario: 0 };

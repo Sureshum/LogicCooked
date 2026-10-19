@@ -12,8 +12,17 @@
     <script src="vendor/three.min.js"></script>
     <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="src/style.css?v=22">
+    <link rel="stylesheet" href="src/style.css?v=23">
 
+    <!-- TEMA DE UI GUARDADO: se aplica antes del primer pintado para evitar parpadeo -->
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('LogicCooked3D_UITheme');
+                if (theme && theme !== 'default') document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { }
+        })();
+    </script>
 </head>
 
 <body class="flex flex-col justify-between h-screen w-screen overflow-hidden">
@@ -102,6 +111,106 @@
         <div id="drag-hint" class="drag-hint" style="display:none">
             <i class="fa-solid fa-hand-pointer mr-2"></i>
             Arrastra el Sol/Luna a la izquierda para más sol y a la derecha para más noche
+        </div>
+
+        <!-- BOTON ADMIN (esquina superior derecha del menu) -->
+        <button id="admin-open-btn" class="admin-corner-btn" title="Panel de administración">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Admin</span>
+        </button>
+
+        <!-- PANEL ADMIN -->
+        <div id="admin-panel" class="admin-panel hidden">
+            <div class="glass-panel admin-panel-inner">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-amber-300"></i> Panel Admin
+                    </h2>
+                    <button id="admin-close-btn" class="admin-icon-btn" title="Cerrar">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- TEMAS DE COLOR -->
+                <div class="admin-section">
+                    <p class="admin-section-title">Color de la interfaz</p>
+                    <div id="admin-theme-grid" class="admin-theme-grid">
+                        <button class="admin-theme-swatch" data-theme="default" title="Original">
+                            <span class="swatch-row">
+                                <i style="background:#11132a"></i><i style="background:#1d2340"></i>
+                                <i style="background:#f5b13d"></i><i style="background:#4fd9ea"></i>
+                            </span>
+                            <span class="swatch-label">Original</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="violeta" title="Violeta">
+                            <span class="swatch-row">
+                                <i style="background:#1a1030"></i><i style="background:#2d1b52"></i>
+                                <i style="background:#c084fc"></i><i style="background:#f0abfc"></i>
+                            </span>
+                            <span class="swatch-label">Violeta</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="bosque" title="Bosque">
+                            <span class="swatch-row">
+                                <i style="background:#0d1f14"></i><i style="background:#163222"></i>
+                                <i style="background:#4ade80"></i><i style="background:#86efac"></i>
+                            </span>
+                            <span class="swatch-label">Bosque</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="rosa" title="Rosa">
+                            <span class="swatch-row">
+                                <i style="background:#2a1020"></i><i style="background:#451a35"></i>
+                                <i style="background:#fb7185"></i><i style="background:#fda4af"></i>
+                            </span>
+                            <span class="swatch-label">Rosa</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="magma" title="Magma">
+                            <span class="swatch-row">
+                                <i style="background:#26100c"></i><i style="background:#421c14"></i>
+                                <i style="background:#fb923c"></i><i style="background:#fca5a5"></i>
+                            </span>
+                            <span class="swatch-label">Magma</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="oceano" title="Océano">
+                            <span class="swatch-row">
+                                <i style="background:#0c1a26"></i><i style="background:#143044"></i>
+                                <i style="background:#38bdf8"></i><i style="background:#67e8f9"></i>
+                            </span>
+                            <span class="swatch-label">Océano</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AJUSTES -->
+                <div class="admin-section">
+                    <p class="admin-section-title">Ajustes</p>
+                    <label class="admin-toggle-row">
+                        <span><i class="fa-solid fa-music mr-1"></i> Música de fondo</span>
+                        <input type="checkbox" id="admin-music-toggle" class="admin-toggle">
+                    </label>
+                    <label class="admin-toggle-row">
+                        <span><i class="fa-solid fa-volume-high mr-1"></i> Efectos de sonido</span>
+                        <input type="checkbox" id="admin-sfx-toggle" class="admin-toggle" checked>
+                    </label>
+                    <div class="admin-slider-row">
+                        <span><i class="fa-solid fa-music mr-1"></i> Volumen música</span>
+                        <input type="range" id="admin-music-volume" min="0" max="30" value="5" class="admin-slider">
+                        <span id="admin-music-volume-label" class="mono-font text-amber-300 text-sm w-8 text-right">5</span>
+                    </div>
+                </div>
+
+                <!-- DATOS -->
+                <div class="admin-section">
+                    <p class="admin-section-title">Datos</p>
+                    <button id="admin-clear-scores" class="admin-action-btn danger">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Borrar Top 10 (todos los juegos)
+                    </button>
+                    <button id="admin-reset-all" class="admin-action-btn danger">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Restablecer todo (datos y tema)
+                    </button>
+                </div>
+
+                <p class="admin-footnote">Los ajustes se guardan en este dispositivo.</p>
+            </div>
         </div>
     </div>
 
@@ -805,8 +914,9 @@
     </div>
 
     <!-- GAME SCRIPTS -->
-    <script src="src/game.js?v=82"></script>
+    <script src="src/game.js?v=83"></script>
     <script src="src/landing.js?v=65"></script>
+    <script src="src/admin.js?v=1"></script>
 
     <!-- OFFLINE / PWA: registra el service worker para jugar sin conexion -->
     <script>

@@ -1140,7 +1140,298 @@
 
 
         /* ==================================================================
-           RESPONSIVE / ADAPTIVE LAYOUT
+           UI THEME OVERRIDES (panel Admin)
+           ================================================================== */
+        html[data-theme="violeta"] {
+            --px-bg: #1a1030;
+            --px-panel: #2d1b52;
+            --px-panel-2: #3b2568;
+            --px-border: #6d4fa8;
+            --px-border-hi: #a78bfa;
+            --px-amber: #c084fc;
+            --px-emerald: #4ade80;
+            --px-rose: #f0abfc;
+            --px-cyan: #e879f9;
+            --px-text: #f3e8ff;
+        }
+
+        html[data-theme="bosque"] {
+            --px-bg: #0d1f14;
+            --px-panel: #163222;
+            --px-panel-2: #1e4230;
+            --px-border: #3a6b4c;
+            --px-border-hi: #6ee7a0;
+            --px-amber: #facc15;
+            --px-emerald: #4ade80;
+            --px-rose: #fb7185;
+            --px-cyan: #86efac;
+            --px-text: #e7f7ed;
+        }
+
+        html[data-theme="rosa"] {
+            --px-bg: #2a1020;
+            --px-panel: #451a35;
+            --px-panel-2: #5c2346;
+            --px-border: #9d3a6b;
+            --px-border-hi: #f9a8c4;
+            --px-amber: #fbbf24;
+            --px-emerald: #6ee7b7;
+            --px-rose: #fb7185;
+            --px-cyan: #fda4af;
+            --px-text: #ffe4ef;
+        }
+
+        html[data-theme="magma"] {
+            --px-bg: #26100c;
+            --px-panel: #421c14;
+            --px-panel-2: #5a271a;
+            --px-border: #a04a28;
+            --px-border-hi: #f0a86e;
+            --px-amber: #fb923c;
+            --px-emerald: #facc15;
+            --px-rose: #f87171;
+            --px-cyan: #fca5a5;
+            --px-text: #ffead9;
+        }
+
+        html[data-theme="oceano"] {
+            --px-bg: #0c1a26;
+            --px-panel: #143044;
+            --px-panel-2: #1b4058;
+            --px-border: #3a7098;
+            --px-border-hi: #7dd3fc;
+            --px-amber: #fbbf24;
+            --px-emerald: #34d399;
+            --px-rose: #fb7185;
+            --px-cyan: #38bdf8;
+            --px-text: #e0f2fe;
+        }
+
+        /* ==================================================================
+           ADMIN PANEL
+           ================================================================== */
+        .admin-corner-btn {
+            position: absolute;
+            top: calc(0.9rem + env(safe-area-inset-top, 0px));
+            right: calc(1rem + env(safe-area-inset-right, 0px));
+            z-index: 1020;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.7rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            background: rgba(15, 23, 42, 0.75);
+            border: 2px solid rgba(148, 163, 184, 0.35);
+            border-radius: 0.4rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            animation: fadeInUp 1s ease-out 1.8s both;
+        }
+
+        .admin-corner-btn:hover {
+            color: #e2e8f0;
+            border-color: rgba(251, 191, 36, 0.7);
+            transform: translateY(-1px);
+        }
+
+        .admin-panel {
+            position: fixed;
+            inset: 0;
+            z-index: 1030;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .admin-panel.hidden {
+            display: none;
+        }
+
+        .admin-panel-inner {
+            width: 100%;
+            max-width: 380px;
+            max-height: 85dvh;
+            overflow-y: auto;
+            padding: 1.25rem;
+            animation: fadeInUp 0.25s ease-out both;
+        }
+
+        .admin-icon-btn {
+            width: 1.9rem;
+            height: 1.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            border-radius: 0.35rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .admin-icon-btn:hover {
+            color: #f87171;
+            border-color: rgba(248, 113, 113, 0.6);
+        }
+
+        .admin-section {
+            margin-bottom: 1.1rem;
+        }
+
+        .admin-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            margin-bottom: 0.55rem;
+        }
+
+        .admin-theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .admin-theme-swatch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.5rem 0.3rem;
+            background: rgba(0, 0, 0, 0.25);
+            border: 2px solid rgba(148, 163, 184, 0.25);
+            border-radius: 0.4rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .admin-theme-swatch:hover {
+            border-color: rgba(251, 191, 36, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .admin-theme-swatch.active {
+            border-color: var(--px-amber, #f5b13d);
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25);
+        }
+
+        .swatch-row {
+            display: flex;
+            gap: 2px;
+        }
+
+        .swatch-row i {
+            display: block;
+            width: 0.85rem;
+            height: 0.85rem;
+            border-radius: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+        }
+
+        .swatch-label {
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #cbd5e1;
+        }
+
+        .admin-toggle-row,
+        .admin-slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.45rem 0.6rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            background: rgba(0, 0, 0, 0.22);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 0.35rem;
+        }
+
+        .admin-toggle {
+            appearance: none;
+            width: 2.2rem;
+            height: 1.15rem;
+            background: rgba(100, 116, 139, 0.4);
+            border: 2px solid rgba(148, 163, 184, 0.35);
+            border-radius: 999px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .admin-toggle::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            width: 0.85rem;
+            height: 0.85rem;
+            background: #cbd5e1;
+            border-radius: 999px;
+            transition: all 0.15s ease;
+        }
+
+        .admin-toggle:checked {
+            background: var(--px-emerald, #3ddc84);
+            border-color: var(--px-emerald, #3ddc84);
+        }
+
+        .admin-toggle:checked::after {
+            left: calc(100% - 0.95rem);
+            background: #0f172a;
+        }
+
+        .admin-slider {
+            flex: 1;
+            accent-color: var(--px-amber, #f5b13d);
+            min-width: 0;
+        }
+
+        .admin-action-btn {
+            display: block;
+            width: 100%;
+            padding: 0.55rem 0.75rem;
+            margin-bottom: 0.35rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-align: left;
+            border-radius: 0.35rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .admin-action-btn.danger {
+            color: #fca5a5;
+            background: rgba(220, 38, 38, 0.12);
+            border: 2px solid rgba(220, 38, 38, 0.35);
+        }
+
+        .admin-action-btn.danger:hover {
+            background: rgba(220, 38, 38, 0.25);
+            border-color: rgba(220, 38, 38, 0.7);
+        }
+
+        .admin-footnote {
+            font-size: 0.65rem;
+            color: #64748b;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        /* ==================================================================
+           RESPONSIVE / ADAPTATIVE LAYOUT
            ================================================================== */
         html, body {
             height: 100vh;
