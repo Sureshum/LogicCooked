@@ -3957,7 +3957,7 @@
             millSetText('million-best', top && top[0] ? String(top[0].score) : '0');
         }
 
-        const MILL_ANSWER_BASE = 'hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10';
+        const MILL_ANSWER_BASE = 'hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10';
         const MILL_LETTERS = ['A', 'B', 'C', 'D'];
 
         function renderMillionQuestion() {
@@ -3978,7 +3978,7 @@
                     b.disabled = false;
                 }
                 const badge = document.getElementById('million-ans-letter-' + i);
-                if (badge) badge.className = 'w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center';
+                if (badge) badge.className = 'w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center';
             }
             const exp = document.getElementById('million-explain');
             if (exp) { exp.classList.add('hidden'); exp.textContent = ''; }

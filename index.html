@@ -12,7 +12,7 @@
     <script src="vendor/three.min.js"></script>
     <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="src/style.css?v=26">
+    <link rel="stylesheet" href="src/style.css?v=27">
 
     <!-- TEMA DE UI GUARDADO: se aplica antes del primer pintado para evitar parpadeo -->
     <script>
@@ -429,7 +429,7 @@
 
     <!-- MILLONARIO: PANEL DE PREGUNTA (IZQUIERDA) -->
     <aside id="million-panel"
-        class="hud-interactive hidden flex-col gap-2.5 fixed top-56 left-4 z-30 w-[min(30rem,94vw)] glass-panel rounded-2xl p-4 border border-yellow-500/30 shadow-2xl">
+        class="hud-interactive hidden flex-col gap-2.5 fixed left-4 z-30 glass-panel rounded-2xl border border-yellow-500/30 shadow-2xl">
         <div class="flex items-center justify-between gap-2 flex-wrap">
             <div class="flex items-center gap-2 min-w-0">
                 <i class="fa-solid fa-sack-dollar text-yellow-300 text-lg"></i>
@@ -462,7 +462,7 @@
         </div>
 
         <div id="million-question"
-            class="bg-slate-950/95 border border-slate-800 rounded-xl px-3.5 py-3 text-sm sm:text-base text-slate-100 mono-font leading-snug shadow-inner">
+            class="bg-slate-950/95 border border-slate-800 rounded-xl px-4 py-4 text-lg sm:text-xl lg:text-2xl text-slate-100 mono-font leading-snug shadow-inner">
             Cargando pregunta…
         </div>
 
@@ -473,30 +473,30 @@
             <div id="million-public-rows" class="space-y-1.5"></div>
         </div>
 
-        <div id="million-answers" class="grid grid-cols-1 gap-2">
+        <div id="million-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <button id="million-ans-0" onclick="answerMillion(0)"
-                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
                 <span id="million-ans-letter-0"
-                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">A</span>
-                <span id="million-ans-text-0" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">A</span>
+                <span id="million-ans-text-0" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
             </button>
             <button id="million-ans-1" onclick="answerMillion(1)"
-                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
                 <span id="million-ans-letter-1"
-                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">B</span>
-                <span id="million-ans-text-1" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">B</span>
+                <span id="million-ans-text-1" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
             </button>
             <button id="million-ans-2" onclick="answerMillion(2)"
-                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
                 <span id="million-ans-letter-2"
-                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">C</span>
-                <span id="million-ans-text-2" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">C</span>
+                <span id="million-ans-text-2" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
             </button>
             <button id="million-ans-3" onclick="answerMillion(3)"
-                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
                 <span id="million-ans-letter-3"
-                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">D</span>
-                <span id="million-ans-text-3" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">D</span>
+                <span id="million-ans-text-3" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
             </button>
         </div>
 
@@ -914,7 +914,7 @@
     </div>
 
     <!-- GAME SCRIPTS -->
-    <script src="src/game.js?v=83"></script>
+    <script src="src/game.js?v=84"></script>
     <script src="src/landing.js?v=65"></script>
     <script src="src/admin.js?v=1"></script>
 

@@ -1,7 +1,7 @@
 // LogicCooked 3D - Service Worker
 // Carga la pagina una vez y queda disponible sin conexion (offline-first).
 
-const CACHE_VERSION = 'logiccooked-v13';
+const CACHE_VERSION = 'logiccooked-v14';
 
 // Recursos esenciales que se guardan al instalar.
 // Nota: usamos rutas relativas para funcionar en GitHub Pages (subcarpeta del repo).
@@ -10,8 +10,8 @@ const PRECACHE_URLS = [
     './index.html',
     './manifest.webmanifest',
     './vendor/icon.svg',
-    './src/style.css?v=26',
-    './src/game.js?v=83',
+    './src/style.css?v=27',
+    './src/game.js?v=84',
     './src/landing.js?v=65',
     './src/admin.js?v=1',
     './vendor/tailwind.min.js',
