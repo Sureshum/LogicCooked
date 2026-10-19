@@ -172,6 +172,6 @@ Luego abre `http://localhost:8080`.
 Si te gusta el proyecto, ¡dale una ⭐!
 
 <a href="https://github.com/Sureshum">
-  <img src="https://media1.tenor.com/m/58nCQbDKOAcAAAAC/ninomae-ina%27nis-ina.gif" width="100%" alt="Header Banner" />
+  <img src="https://media1.tenor.com/m/phCfJrDj37IAAAAC/gigi-murin-hololive.gif" width="100%" alt="Header Banner" />
 </a>
 
