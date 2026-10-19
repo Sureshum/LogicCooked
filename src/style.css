@@ -1485,21 +1485,21 @@
 
             /* Panel del millonario y ticket de cocina: full-width bajo el header */
             #million-panel {
-                top: 5.75rem !important;
+                top: 7rem !important;
                 left: 0.4rem !important;
                 right: 0.4rem;
                 width: auto !important;
-                max-height: calc(100dvh - 7.5rem);
+                max-height: calc(100dvh - 8.75rem);
                 overflow-y: auto;
                 overscroll-behavior: contain;
             }
 
             #mission-ticket-card {
-                top: 5.75rem !important;
+                top: 7rem !important;
                 left: 0.4rem;
                 right: 0.4rem;
                 width: auto !important;
-                max-height: calc(100dvh - 7.5rem);
+                max-height: calc(100dvh - 8.75rem);
                 overflow-y: auto;
                 overscroll-behavior: contain;
             }
@@ -1588,11 +1588,11 @@
             }
 
             #million-panel {
-                max-height: calc(100dvh - 6.5rem);
+                max-height: calc(100dvh - 8rem);
             }
 
             #mission-ticket-card {
-                max-height: calc(100dvh - 6.5rem);
+                max-height: calc(100dvh - 8rem);
             }
 
             #big-timer {
