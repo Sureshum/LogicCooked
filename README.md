@@ -17,8 +17,10 @@ de forma visual y divertida.
 ## 🎮 Modos de juego
 
 ### 0. Patio (hub)
-Explora libremente el patio con **WASD**. Acércate a una zona y pulsa **E** para entrar.
-Aquí también encuentras el **Vestidor** y a los **personajes escondidos** que desbloquean skins.
+Explora libremente una **isla rodeada de mar** con **WASD**. Acércate a una zona y pulsa **E**
+para entrar. El patio tiene fuente, molino, estanque, embarcadero, barcas, boyas, islitas con
+palmeras y gaviotas. Alrededor hay setos con flores y banderas; el **Vestidor** (sin paredes,
+todo abierto) y los **personajes escondidos** que desbloquean skins esperan en las esquinas.
 
 ### 1. Cocina 3D (Conjuntos)
 Inspirado en *Overcooked*. Cada **comanda** pide una operación de conjuntos:
@@ -35,6 +37,20 @@ De Morgan, absorción, etc.
 Estilo *cables lógicos*. Enlaza cada expresión de la izquierda con su **equivalencia formal**
 de la derecha (por ejemplo, `(A ∪ B)'` con `A' ∩ B'` — Ley de De Morgan).
 
+### 4. Millonario Lógico
+Estilo *¿Quién quiere ser millonario?*. El chef se sienta tras la mesa del plató y lanzas
+**15 preguntas de lógica proposicional** (evaluación de valores de verdad, negación,
+equivalencias, tautologías, contradicciones, contingencias, traducción de frases y conjuntos)
+con 4 opciones. Tienes **3 vidas** (eliges 3, 2 o 1 al empezar): cada fallo o timeout cuesta
+una vida y a las 0 se acaba la partida con el premio acumulado. Cada pregunta es **siempre
+distinta**: el generador local verifica por fuerza bruta las 8 asignaciones de verdad de
+`p, q, r` y descarta cualquier repetición o opción equivalente a la correcta. Tienes dos
+comodines (**50:50** y **voto del público**), tiempos por pregunta según dificultad y
+**premios seguros** en los escalones 5 (1.000 pts) y 10 (32.000 pts). ¿Llegas al millón?
+
+Durante la partida pulsa **B** para **bailar Gangnam Style** (también funciona con el chef
+en el patio). ¡Ojo: moverte cancela el baile!
+
 ---
 
 ## ⌨️ Controles
@@ -45,6 +61,8 @@ de la derecha (por ejemplo, `(A ∪ B)'` con `A' ∩ B'` — Ley de De Morgan).
 | Interactuar / entrar a zona | `E` |
 | Entregar plato (Cocina) | `Espacio` |
 | Disparar (Aim) | Clic |
+| Responder (Millonario) | Clic o `1` `2` `3` `4` |
+| Bailar Gangnam Style | `B` |
 
 En la pantalla de inicio puedes además **arrastrar el Sol/Luna** para cambiar entre día y noche.
 
@@ -61,7 +79,20 @@ desbloquearlos como skins:
 - 🐱 Gato
 - 🪵 Tung Tung Tung Sahur
 
-Una vez desbloqueados aparecen disponibles en el **Vestidor**.
+Una vez desbloqueados aparecen disponibles en el **Vestidor**. Todas las skins (y el público
+de la cocina y del plató) tienen **brazos y piernas animados** al caminar y al bailar.
+
+---
+
+## 📱 Responsive
+
+La interfaz se adapta a **PC, tablets y móviles**: en pantallas pequeñas el switcher de modos
+muestra solo iconos, las barras de acciones rápidas se vuelven desplazables en horizontal y
+los paneles del Millonario y la Cocina se convierten en hojas inferiores con scroll. La cámara
+3D ajusta su FOV para que la escena quepa en vertical.
+
+> Los controles del patio y la cocina requieren teclado (`WASD`), así que en móvil esos modos
+> se disfrutan mejor en PC. Aim, Conecta y Millonario son jugables con táctil.
 
 ---
 

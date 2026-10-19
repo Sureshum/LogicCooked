@@ -1137,3 +1137,174 @@
             background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0 1px, rgba(0, 0, 0, 0) 1px 3px);
             opacity: 0.6;
         }
+
+
+        /* ==================================================================
+           RESPONSIVE / ADAPTIVE LAYOUT
+           ================================================================== */
+        html, body {
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        #webgl-container,
+        #labels-container {
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        /* Safe-area para moviles con notch */
+        header.hud-layer {
+            padding-top: calc(0.5rem + env(safe-area-inset-top, 0px));
+            padding-left: calc(0.75rem + env(safe-area-inset-left, 0px));
+            padding-right: calc(0.75rem + env(safe-area-inset-right, 0px));
+        }
+
+        /* ---- Tablet / portatil pequeno (<= 900px) ---- */
+        @media (max-width: 900px) {
+            .mode-indicator {
+                display: none !important;
+            }
+
+            /* Barras de acciones rapidas: una sola fila con scroll horizontal */
+            #hub-quick-actions,
+            #kitchen-quick-actions,
+            #aim-quick-actions,
+            #connect-quick-actions,
+            #million-quick-actions {
+                flex-wrap: nowrap !important;
+                overflow-x: auto;
+                width: calc(100vw - 1rem);
+                max-width: calc(100vw - 1rem);
+                justify-content: flex-start !important;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+                gap: 0.5rem;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+
+            #hub-quick-actions::-webkit-scrollbar,
+            #kitchen-quick-actions::-webkit-scrollbar,
+            #aim-quick-actions::-webkit-scrollbar,
+            #connect-quick-actions::-webkit-scrollbar,
+            #million-quick-actions::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Panel del millonario y ticket de cocina: full-width bajo el header */
+            #million-panel {
+                top: 5.75rem !important;
+                left: 0.4rem !important;
+                right: 0.4rem;
+                width: auto !important;
+                max-height: calc(100dvh - 7.5rem);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+
+            #mission-ticket-card {
+                top: 5.75rem !important;
+                left: 0.4rem;
+                right: 0.4rem;
+                width: auto !important;
+                max-height: calc(100dvh - 7.5rem);
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+
+            /* El timer gigante no debe tapar el panel en movil */
+            body.mode-millonario #big-timer {
+                display: none;
+            }
+
+            /* Vestidor: que los botones de skins quepan */
+            #skin-panel .hud-interactive {
+                flex-wrap: wrap;
+                justify-content: center;
+                max-width: calc(100vw - 1rem);
+            }
+        }
+
+        /* ---- Telefono (<= 560px) ---- */
+        @media (max-width: 560px) {
+            /* Switcher de modos: solo iconos */
+            .mode-btn-label {
+                display: none;
+            }
+
+            #btn-mode-hub,
+            #btn-mode-overcooked,
+            #btn-mode-aim,
+            #btn-mode-connect,
+            #btn-mode-millonario {
+                padding-left: 0.55rem;
+                padding-right: 0.55rem;
+            }
+
+            /* Nombre del jugador mas corto en HUD */
+            #playerNameDisplay {
+                max-width: 4.5rem;
+            }
+
+            /* Timer grande mas compacto */
+            #big-timer-pill {
+                padding-left: 1rem;
+                padding-right: 1rem;
+                gap: 0.6rem;
+            }
+
+            #big-timer-value {
+                font-size: 1.75rem;
+            }
+
+            #big-timer > div:last-child {
+                width: 7rem;
+            }
+
+            /* Avisos centrados sin desbordar */
+            #crowd-warning,
+            #start-hint,
+            #hub-prompt {
+                max-width: 94vw;
+            }
+
+            #start-hint-text,
+            #hub-prompt-text {
+                text-align: center;
+                max-width: 92vw;
+                white-space: normal;
+            }
+
+            /* Modales de fin de juego: padding inferior seguro */
+            #kitchen-gameover > div,
+            #aim-gameover > div,
+            #connect-gameover > div,
+            #million-gameover > div,
+            #leaderboardModal > div {
+                padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+            }
+        }
+
+        /* ---- Pantallas bajas (movil en horizontal) ---- */
+        @media (max-height: 520px) {
+            .landing-content {
+                padding: 0.75rem;
+            }
+
+            .game-subtitle {
+                margin-bottom: 0.75rem;
+            }
+
+            #million-panel {
+                max-height: calc(100dvh - 6.5rem);
+            }
+
+            #mission-ticket-card {
+                max-height: calc(100dvh - 6.5rem);
+            }
+
+            #big-timer {
+                bottom: 0.4rem;
+            }
+        }

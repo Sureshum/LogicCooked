@@ -71,7 +71,7 @@
             }
         }
 
-        const modeScores = { overcooked: 0, aim: 0, connect: 0 };
+        const modeScores = { overcooked: 0, aim: 0, connect: 0, millonario: 0 };
         let globalStreak = 0;
         let statHits = 0;
         let statMisses = 0;
@@ -105,7 +105,7 @@
             }
             return picks.sort((a, b) => b.score - a.score);
         }
-        const MODE_LABELS = { overcooked: 'Cocina 3D', aim: 'Rayo Lógico', connect: 'Cables Lógicos' };
+        const MODE_LABELS = { overcooked: 'Cocina 3D', aim: 'Rayo Lógico', connect: 'Cables Lógicos', millonario: 'Millonario Lógico' };
         const KITCHEN_TIMES = [60, 120, 180];
         const DIFFICULTY_LABELS = { easy: 'Fácil', normal: 'Normal', hard: 'Difícil' };
         const DIFFICULTY_CLASSES = {
@@ -573,6 +573,19 @@
             return lg;
         }
 
+        function createNpcArm(side, armColor, handColor) {
+            const armG = new THREE.Group();
+            const armMat = new THREE.MeshStandardMaterial({ color: armColor, roughness: 0.7 });
+            const handMat = new THREE.MeshStandardMaterial({ color: handColor, roughness: 0.7 });
+            const limb = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.62, 10), armMat);
+            limb.position.y = -0.31; limb.castShadow = true; armG.add(limb);
+            const hand = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 10), handMat);
+            hand.position.y = -0.68; hand.castShadow = true; armG.add(hand);
+            armG.rotation.z = 0.4 * side;
+            armG.userData.baseZ = 0.4 * side;
+            return armG;
+        }
+
         function create67Figure(color = 0x22d3ee, emissive = 0x0891b2) {
             const group = new THREE.Group();
             const digitMat = new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity: 0.6, roughness: 0.4 });
@@ -597,13 +610,18 @@
             digit(-0.45, { a: 1, f: 1, g: 1, e: 1, c: 1, d: 1 });   // "6"
             digit(0.45, { a: 1, b: 1, c: 1 });                        // "7"
             group.add(body);
+            const armL = createNpcArm(-1, color, emissive);
+            const armR = createNpcArm(1, color, emissive);
+            armL.position.set(-0.82, 1.95, 0);
+            armR.position.set(0.82, 1.95, 0);
+            body.add(armL); body.add(armR);
             const legMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 });
             const shoeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
             const makeLeg = (side) => createNpcLeg(side, 0x0f172a, 0x334155);
             const legL = makeLeg(-1), legR = makeLeg(1);
             group.add(legL);
             group.add(legR);
-            return { group, body, legL, legR };
+            return { group, body, legL, legR, armL, armR };
         }
 
         // ---- Animal figures (wearable skins + hidden NPCs) ----
@@ -629,11 +647,16 @@
             snout.scale.set(1.1, 0.8, 0.9); snout.position.set(0, 2.16, 0.44); body.add(snout);
             const nose = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), dark);
             nose.position.set(0, 2.24, 0.68); body.add(nose);
+            const armL = createNpcArm(-1, 0x8d5524, 0x5a3416);
+            const armR = createNpcArm(1, 0x8d5524, 0x5a3416);
+            armL.position.set(-0.68, 1.85, 0.05);
+            armR.position.set(0.68, 1.85, 0.05);
+            body.add(armL); body.add(armR);
             group.add(body);
             const legL = createNpcLeg(-1, 0x8d5524, 0x5a3416);
             const legR = createNpcLeg(1, 0x8d5524, 0x5a3416);
             group.add(legL); group.add(legR);
-            return { group, body, legL, legR };
+            return { group, body, legL, legR, armL, armR };
         }
 
         function createWolfFigure() {
@@ -660,11 +683,16 @@
             });
             const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 0.95, 10), fur);
             tail.position.set(0, 1.2, -0.6); tail.rotation.x = -1.05; tail.castShadow = true; body.add(tail);
+            const armL = createNpcArm(-1, 0x9aa5b1, 0x374151);
+            const armR = createNpcArm(1, 0x9aa5b1, 0x374151);
+            armL.position.set(-0.6, 1.85, 0.05);
+            armR.position.set(0.6, 1.85, 0.05);
+            body.add(armL); body.add(armR);
             group.add(body);
             const legL = createNpcLeg(-1, 0x9aa5b1, 0x374151);
             const legR = createNpcLeg(1, 0x9aa5b1, 0x374151);
             group.add(legL); group.add(legR);
-            return { group, body, legL, legR };
+            return { group, body, legL, legR, armL, armR };
         }
 
         function createCatFigure() {
@@ -696,11 +724,16 @@
             });
             const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.1, 1.05, 10), fur);
             tail.position.set(0, 1.15, -0.58); tail.rotation.x = -0.9; tail.castShadow = true; body.add(tail);
+            const armL = createNpcArm(-1, 0xf59e0b, 0xfef3c7);
+            const armR = createNpcArm(1, 0xf59e0b, 0xfef3c7);
+            armL.position.set(-0.58, 1.82, 0.05);
+            armR.position.set(0.58, 1.82, 0.05);
+            body.add(armL); body.add(armR);
             group.add(body);
             const legL = createNpcLeg(-1, 0xf59e0b, 0x7c2d12);
             const legR = createNpcLeg(1, 0xf59e0b, 0x7c2d12);
             group.add(legL); group.add(legR);
-            return { group, body, legL, legR };
+            return { group, body, legL, legR, armL, armR };
         }
 
         function createTungTungFigure() {
@@ -744,18 +777,29 @@
                 tooth.position.set(i * 0.17, 1.77, 0.55); body.add(tooth);
             }
 
-            // Left arm hanging down
-            const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.85, 10), bark);
-            armL.position.set(-0.66, 1.5, 0); armL.rotation.z = 0.55; armL.castShadow = true; body.add(armL);
-            const handL = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), barkDark);
-            handL.position.set(-0.92, 1.16, 0); body.add(handL);
-            // Right arm raised, holding the bat
-            const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.85, 10), bark);
-            armR.position.set(0.66, 1.78, 0.06); armR.rotation.z = -1.15; armR.castShadow = true; body.add(armR);
-            const handR = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), barkDark);
-            handR.position.set(0.95, 2.1, 0.1); body.add(handR);
+            // Left arm: shoulder pivot hanging down-out to the left
+            const armL = new THREE.Group();
+            armL.position.set(-0.45, 1.9, 0.05);
+            const armLlimb = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.12, 0.85, 10), bark);
+            armLlimb.position.y = -0.425; armLlimb.castShadow = true; armL.add(armLlimb);
+            const handL = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 10), barkDark);
+            handL.position.y = -0.9; armL.add(handL);
+            armL.rotation.z = -0.45;
+            armL.userData.baseZ = -0.45;
+            body.add(armL);
 
-            // Baseball bat resting over the shoulder
+            // Right arm: raised, hand grips the bat
+            const armR = new THREE.Group();
+            armR.position.set(0.32, 1.92, 0.1);
+            const armRlimb = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.12, 0.85, 10), bark);
+            armRlimb.position.y = -0.425; armRlimb.castShadow = true; armR.add(armRlimb);
+            const handR = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 10), barkDark);
+            handR.position.y = -0.9; armR.add(handR);
+            armR.rotation.z = 1.84;
+            armR.userData.baseZ = 1.84;
+            body.add(armR);
+
+            // Baseball bat resting over the shoulder (grip lands in the right hand)
             const batWood = new THREE.MeshStandardMaterial({ color: 0xd9a066, roughness: 0.8 });
             const bat = new THREE.Group();
             const batBody = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.055, 1.15, 12), batWood);
@@ -772,7 +816,7 @@
             const legL = createNpcLeg(-1, 0x4a2c17, 0x2f1b0f);
             const legR = createNpcLeg(1, 0x4a2c17, 0x2f1b0f);
             group.add(legL); group.add(legR);
-            return { group, body, legL, legR };
+            return { group, body, legL, legR, armL, armR };
         }
 
         function buildSpecialSkinFigure(id) {
@@ -1275,6 +1319,7 @@
         }
 
         function currentRoundLimit() {
+            if (currentMode === 'millonario') return MILL_TIMES[millDifficulty];
             return currentMode === 'overcooked' ? kitchenRoundTime : 45;
         }
 
@@ -1295,6 +1340,18 @@
             valEl.className = 'mono-font text-4xl font-extrabold tabular-nums leading-none ' + (low ? 'text-rose-400' : 'text-cyan-300');
             if (pillEl) {
                 pillEl.className = 'flex items-center gap-2.5 bg-slate-950/85 backdrop-blur border-2 rounded-2xl px-5 py-1.5 shadow-2xl ' + (low ? 'border-rose-500/60 animate-pulse' : 'border-cyan-500/50');
+            }
+            if (currentMode === 'millonario') {
+                const mBar = document.getElementById('million-timer-bar');
+                const mVal = document.getElementById('million-timer-val');
+                if (mBar) {
+                    mBar.style.width = pct + '%';
+                    mBar.className = 'h-full rounded-full transition-[width] duration-1000 ease-linear ' + (low ? 'bg-rose-500' : 'bg-amber-400');
+                }
+                if (mVal) {
+                    mVal.textContent = secs;
+                    mVal.className = 'mono-font text-[11px] font-extrabold tabular-nums ' + (low ? 'text-rose-400' : 'text-amber-300');
+                }
             }
         }
 
@@ -1819,6 +1876,12 @@
         }
 
         function triggerGangnamStyle() {
+            if (currentMode === 'millonario') {
+                if (millGameOver || awaitingStart) return;
+                gangnamTimer = 4.5;
+                playSFX('success');
+                return;
+            }
             if ((currentMode !== 'overcooked' && currentMode !== 'hub') || kitchenGameOver || awaitingStart) return;
             gangnamTimer = 4.5;
             playSFX('success');
@@ -1961,6 +2024,14 @@
                     p.mesh.position.z += c.dir * p.speed * dt;
                     p.mesh.position.y = p.baseY + Math.abs(Math.sin(elapsed * 8 + p.phase)) * 0.12;
                     p.mesh.rotation.y = elapsed * 6 + p.phase;
+                    const ud = p.mesh.userData;
+                    if (ud.armL) {
+                        const sw = Math.sin(elapsed * 8 + p.phase) * 0.7;
+                        ud.armL.rotation.x = sw;
+                        ud.armR.rotation.x = -sw;
+                        ud.legL.rotation.x = -sw * 0.6;
+                        ud.legR.rotation.x = sw * 0.6;
+                    }
                     if (Math.abs(p.mesh.position.z) < limit) allGone = false;
                 });
                 if (allGone) {
@@ -1977,13 +2048,27 @@
             const bodyMat = new THREE.MeshStandardMaterial({ color: colors[i % colors.length], roughness: 0.6 });
             const headMat = new THREE.MeshStandardMaterial({ color: 0xfcd34d, roughness: 0.5 });
             const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.34, 1.0, 12), bodyMat);
-            body.position.y = 0.5;
+            body.position.y = 0.9;
             body.castShadow = true;
             group.add(body);
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 14, 14), headMat);
-            head.position.y = 1.15;
+            head.position.y = 1.65;
             head.castShadow = true;
             group.add(head);
+            const armL = createNpcArm(-1, colors[i % colors.length], 0xfcd34d);
+            const armR = createNpcArm(1, colors[i % colors.length], 0xfcd34d);
+            armL.position.set(-0.38, 1.32, 0);
+            armR.position.set(0.38, 1.32, 0);
+            armL.scale.set(0.85, 0.85, 0.85);
+            armR.scale.set(0.85, 0.85, 0.85);
+            group.add(armL); group.add(armR);
+            const legL = createNpcLeg(-1, 0x334155, 0x1e293b);
+            const legR = createNpcLeg(1, 0x334155, 0x1e293b);
+            group.add(legL); group.add(legR);
+            group.userData.armL = armL;
+            group.userData.armR = armR;
+            group.userData.legL = legL;
+            group.userData.legR = legR;
             return group;
         }
 
@@ -2156,6 +2241,12 @@
                     const g = Math.sin(t * 8);
                     f.legL.rotation.x = g * 0.6;
                     f.legR.rotation.x = -g * 0.6;
+                    if (f.armL && f.armR) {
+                        f.armL.rotation.x = -1.2 + g * 0.25;
+                        f.armR.rotation.x = -1.2 - g * 0.25;
+                        f.armL.rotation.z = 0.7;
+                        f.armR.rotation.z = -0.7;
+                    }
                     f.body.rotation.z = Math.sin(t * 4) * 0.14;
                     f.body.position.y = Math.abs(g) * 0.08;
                 }
@@ -2200,6 +2291,12 @@
                 const swing67 = Math.sin(chefWalkPhase) * 0.7 * norm;
                 f.legL.rotation.x = swing67;
                 f.legR.rotation.x = -swing67;
+                if (f.armL && f.armR) {
+                    f.armL.rotation.x = -swing67 * 0.8;
+                    f.armR.rotation.x = swing67 * 0.8;
+                    f.armL.rotation.z = f.armL.userData.baseZ ?? f.armL.rotation.z;
+                    f.armR.rotation.z = f.armR.userData.baseZ ?? f.armR.rotation.z;
+                }
                 f.body.position.y = Math.abs(Math.sin(chefWalkPhase)) * 0.08 * norm;
                 f.body.rotation.z = Math.sin(chefWalkPhase) * 0.05 * norm;
                 f.group.position.y = Math.abs(Math.sin(chefWalkPhase)) * 0.04 * norm;
@@ -3262,6 +3359,1067 @@
         }
 
         // ============================================================
+        //  ¿QUIÉN QUIERE SER MILLONARIO? (modo "millonario")
+        // ============================================================
+        //  Escenario 3D del plató: el chef queda DETRÁS de una mesa en la
+        //  derecha y la pregunta + 4 respuestas se muestran en un panel HTML
+        //  a la IZQUIERDA de la pantalla.
+        const millionGroup = new THREE.Group();
+        millionGroup.position.set(-120, 0, 0);
+        scene.add(millionGroup);
+        const millionAnimated = [];   // { update(elapsed, dt) }
+
+        const MILL_PRIZES = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 1000000];
+        const MILL_TOTAL = 15;
+        const MILL_SAFE = { 5: 1000, 10: 32000 };   // escalones seguros (al responder 5 o 10 bien)
+        const MILL_TIMES = { easy: 40, normal: 30, hard: 22 };
+        let millDifficulty = 'normal';
+        let millLivesMax = 3;
+        let millLives = 3;
+        let millGameOver = false;
+        let millRung = 0;              // preguntas acertadas
+        let millLocked = false;        // true durante la pausa tras responder
+        let millFiftyUsed = false;
+        let millPublicUsed = false;
+        let millQuestion = null;
+        let millSeq = 0;               // invalida timeouts pendientes
+        let millLastTemplate = null;
+        let millRemoved = new Set();
+        const millSeen = new Set();    // firmas de preguntas ya vistas (unicidad)
+
+        function millTime() { return MILL_TIMES[millDifficulty] || 30; }
+        function millPick(a) { return a[Math.floor(Math.random() * a.length)]; }
+        function millRnd(n) { return Math.floor(Math.random() * n); }
+        function millShuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+            }
+            return arr;
+        }
+        function millSetText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+        function millFormat(n) { return Number(n).toLocaleString('es-ES'); }
+
+        // ---------------- Núcleo: fórmulas proposicionales ----------------
+        const MILL_VARS = ['p', 'q', 'r'];
+
+        function propEval(node, env) {
+            if (typeof node === 'string') return !!env[node];
+            switch (node[0]) {
+                case 'not': return !propEval(node[1], env);
+                case 'and': return propEval(node[1], env) && propEval(node[2], env);
+                case 'or': return propEval(node[1], env) || propEval(node[2], env);
+                case 'imp': return !propEval(node[1], env) || propEval(node[2], env);
+                case 'iff': return propEval(node[1], env) === propEval(node[2], env);
+            }
+            return false;
+        }
+
+        function propForEach(fn) {
+            for (let mask = 0; mask < 8; mask++) {
+                const env = {};
+                MILL_VARS.forEach((v, i) => { env[v] = !!(mask & (1 << i)); });
+                fn(env);
+            }
+        }
+
+        function propIsTautology(f) { let ok = true; propForEach(env => { if (!propEval(f, env)) ok = false; }); return ok; }
+        function propIsContradiction(f) { let ok = true; propForEach(env => { if (propEval(f, env)) ok = false; }); return ok; }
+        function propIsContingent(f) { return !propIsTautology(f) && !propIsContradiction(f); }
+        function propEquiv(a, b) { let ok = true; propForEach(env => { if (propEval(a, env) !== propEval(b, env)) ok = false; }); return ok; }
+        function propCountTrue(f) { let n = 0; propForEach(env => { if (propEval(f, env)) n++; }); return n; }
+
+        function propStr(f) {
+            if (typeof f === 'string') return f;
+            if (f[0] === 'not') return '¬' + millParen(f[1]);
+            const sym = { and: ' ∧ ', or: ' ∨ ', imp: ' → ', iff: ' ↔ ' }[f[0]];
+            return millParen(f[1]) + sym + millParen(f[2]);
+        }
+        function millParen(f) {
+            if (typeof f === 'string') return f;
+            if (f[0] === 'not') return propStr(f);
+            return '(' + propStr(f) + ')';
+        }
+
+        function millRandFormula(depth, vars) {
+            const pool = (vars && vars.length) ? vars : MILL_VARS;
+            if (depth <= 0 || Math.random() < 0.3) return millPick(pool);
+            if (Math.random() < 0.25) return ['not', millRandFormula(depth - 1, pool)];
+            return [millPick(['and', 'or', 'imp', 'iff']), millRandFormula(depth - 1, pool), millRandFormula(depth - 1, pool)];
+        }
+
+        function millFindFormula(pred, depth, vars) {
+            for (let i = 0; i < 250; i++) {
+                const f = millRandFormula(depth, vars);
+                if (pred(f)) return f;
+            }
+            return null;
+        }
+
+        // Negación simplificada (De Morgan, doble negación, implicación)
+        function millNegation(f) {
+            if (typeof f === 'string') return ['not', f];
+            const op = f[0], a = f[1], b = f[2];
+            if (op === 'not') return a;
+            if (op === 'and') return ['or', millNegation(a), millNegation(b)];
+            if (op === 'or') return ['and', millNegation(a), millNegation(b)];
+            if (op === 'imp') return ['and', a, ['not', b]];
+            if (op === 'iff') return ['iff', a, ['not', b]];
+            return ['not', f];
+        }
+
+        // Variante equivalente (verificada con la tabla de verdad)
+        function millEquivVariant(f) {
+            if (typeof f === 'string') return ['not', ['not', f]];
+            const op = f[0], a = f[1], b = f[2];
+            const rules = [];
+            if (op === 'not') {
+                if (typeof a !== 'string' && a[0] === 'not') rules.push(() => a[1]);
+                if (typeof a !== 'string' && (a[0] === 'and' || a[0] === 'or')) rules.push(() => [a[0] === 'and' ? 'or' : 'and', ['not', a[1]], ['not', a[2]]]);
+                if (typeof a !== 'string' && a[0] === 'imp') rules.push(() => ['and', a[1], ['not', a[2]]]);
+            } else if (op === 'imp') {
+                rules.push(() => ['or', ['not', a], b]);
+            } else if (op === 'and' || op === 'or') {
+                rules.push(() => [op, b, a]);
+                if (typeof b !== 'string' && b[0] === (op === 'and' ? 'or' : 'and')) {
+                    rules.push(() => [op === 'and' ? 'or' : 'and', [op, a, b[1]], [op, a, b[2]]]);
+                }
+                if (typeof a !== 'string' && a[0] === (op === 'and' ? 'or' : 'and')) {
+                    rules.push(() => [op === 'and' ? 'or' : 'and', [op, a[1], b], [op, a[2], b]]);
+                }
+            } else if (op === 'iff') {
+                rules.push(() => ['and', ['imp', a, b], ['imp', b, a]]);
+            }
+            millShuffle(rules);
+            for (const r of rules) {
+                let v = null;
+                try { v = r(); } catch (err) { continue; }
+                if (v && propStr(v) !== propStr(f) && propEquiv(v, f)) return v;
+            }
+            return ['not', ['not', f]];
+        }
+
+        function millEntry(node) { return { text: propStr(node), node }; }
+
+        function propVars(f, acc) {
+            acc = acc || [];
+            if (typeof f === 'string') { if (!acc.includes(f)) acc.push(f); return acc; }
+            propVars(f[1], acc);
+            if (f[0] !== 'not') propVars(f[2], acc);
+            return acc;
+        }
+
+        // Monta 4 opciones validando que los distractores sean semánticamente incorrectos
+        function millFinish(category, text, correctEntry, poolFn, okFn, explain) {
+            const opts = [correctEntry];
+            let guard = 0;
+            while (opts.length < 4 && guard++ < 500) {
+                const c = poolFn();
+                if (!c || opts.some(o => o.text === c.text)) continue;
+                if (okFn && !okFn(c)) continue;
+                opts.push(c);
+            }
+            if (opts.length < 4) return null;
+            millShuffle(opts);
+            return {
+                category, text,
+                options: opts.map(o => o.text),
+                correctIdx: opts.findIndex(o => o.text === correctEntry.text),
+                explain
+            };
+        }
+
+        // ---------------- Builders de preguntas ----------------
+        function millB_evalTrue() {
+            const env = { p: Math.random() < 0.5, q: Math.random() < 0.5, r: Math.random() < 0.5 };
+            const depth = millDifficulty === 'easy' ? 1 : 2;
+            const node = millFindFormula(f => propEval(f, env) === true, depth);
+            if (!node) return null;
+            const correct = millEntry(node);
+            const label = MILL_VARS.map(v => `${v} = ${env[v] ? 'V' : 'F'}`).join(', ');
+            return millFinish(
+                'VALORES LÓGICOS',
+                `Si ${label}, ¿cuál de estas proposiciones es VERDADERA?`,
+                correct,
+                () => { const f = millRandFormula(depth); return propEval(f, env) ? null : millEntry(f); },
+                c => propEval(c.node, env) === false,
+                `Sustituyendo los valores: ${propStr(node)} = V.`
+            );
+        }
+
+        function millB_equiv() {
+            const depth = millDifficulty === 'hard' ? 3 : 2;
+            let f = null;
+            for (let i = 0; i < 80; i++) {
+                const c = millRandFormula(depth);
+                if (typeof c !== 'string' && c[0] !== 'not') { f = c; break; }
+            }
+            if (!f) f = millRandFormula(2);
+            const variant = millEquivVariant(f);
+            if (!variant || propStr(variant) === propStr(f) || !propEquiv(variant, f)) return null;
+            const correct = millEntry(variant);
+            const vs = propVars(f).length > 1 ? propVars(f) : MILL_VARS;
+            return millFinish(
+                'EQUIVALENCIAS',
+                `¿Cuál de las siguientes fórmulas es EQUIVALENTE a ${propStr(f)}?`,
+                correct,
+                () => millEntry(millRandFormula(depth, vs)),
+                c => !propEquiv(c.node, f),
+                `Ambas coinciden en las 8 filas: ${propStr(f)} ≡ ${propStr(variant)}.`
+            );
+        }
+
+        function millB_negate() {
+            const depth = millDifficulty === 'easy' ? 1 : 2;
+            let f = millRandFormula(depth);
+            for (let i = 0; i < 60 && (typeof f === 'string' || f[0] === 'not'); i++) f = millRandFormula(depth);
+            const neg = millNegation(f);
+            const target = ['not', f];
+            if (!neg || propStr(neg) === propStr(f) || !propEquiv(neg, target)) return null;
+            const correct = millEntry(neg);
+            const vs = propVars(f).length > 1 ? propVars(f) : MILL_VARS;
+            return millFinish(
+                'NEGACIÓN',
+                `¿Cuál de estas fórmulas equivale a la negación de ${propStr(f)}?`,
+                correct,
+                () => millEntry(millRandFormula(depth + 1, vs)),
+                c => !propEquiv(c.node, target),
+                `¬${millParen(f)} ≡ ${propStr(neg)}.`
+            );
+        }
+
+        function millB_tautology() {
+            const depth = millDifficulty === 'hard' ? 3 : 2;
+            const f = millRandFormula(depth);
+            const g = millRandFormula(1);
+            const correctNode = millPick([
+                ['or', f, millNegation(f)],
+                ['imp', f, f],
+                ['iff', f, f],
+                ['not', ['and', f, ['not', f]]],
+                ['or', g, ['iff', g, g]]
+            ]);
+            if (!propIsTautology(correctNode)) return null;
+            const correct = millEntry(correctNode);
+            return millFinish(
+                'TAUTOLOGÍA',
+                '¿Cuál de estas proposiciones es una TAUTOLOGÍA (siempre verdadera)?',
+                correct,
+                () => millEntry(millRandFormula(depth)),
+                c => !propIsTautology(c.node),
+                `${propStr(correctNode)} es verdadera en las 8 filas de su tabla de verdad.`
+            );
+        }
+
+        function millB_contradiction() {
+            const depth = millDifficulty === 'hard' ? 3 : 2;
+            const f = millRandFormula(depth);
+            const correctNode = millPick([
+                ['and', f, millNegation(f)],
+                ['iff', f, ['not', f]],
+                ['not', ['or', f, ['not', f]]]
+            ]);
+            if (!propIsContradiction(correctNode)) return null;
+            const correct = millEntry(correctNode);
+            return millFinish(
+                'CONTRADICCIÓN',
+                '¿Cuál de estas proposiciones es una CONTRADICCIÓN (siempre falsa)?',
+                correct,
+                () => millEntry(millRandFormula(depth)),
+                c => !propIsContradiction(c.node),
+                `${propStr(correctNode)} es falsa en las 8 filas de su tabla de verdad.`
+            );
+        }
+
+        function millB_contingency() {
+            const depth = 3;
+            const node = millFindFormula(f => propIsContingent(f), depth);
+            if (!node) return null;
+            const correct = millEntry(node);
+            return millFinish(
+                'CONTINGENCIA',
+                '¿Cuál de estas proposiciones es una CONTINGENCIA (a veces verdadera y a veces falsa)?',
+                correct,
+                () => {
+                    const f = millRandFormula(2);
+                    if (propIsTautology(f) || propIsContradiction(f)) return millEntry(f);
+                    return null;
+                },
+                null,
+                `${propStr(node)} ni es tautología ni contradicción: cambia según los valores.`
+            );
+        }
+
+        function millB_countTrue() {
+            const depth = millDifficulty === 'hard' ? 3 : 2;
+            let f = millRandFormula(depth);
+            let count = propCountTrue(f);
+            for (let i = 0; i < 50 && (count === 0 || count === 8); i++) {
+                f = millRandFormula(depth);
+                count = propCountTrue(f);
+            }
+            const correct = { text: String(count), value: count };
+            return millFinish(
+                'TABLA DE VERDAD',
+                `De las 8 asignaciones de p, q y r, ¿cuántas hacen VERDADERA la fórmula ${propStr(f)}?`,
+                correct,
+                () => { const v = millRnd(9); return { text: String(v), value: v }; },
+                c => c.value !== count,
+                `${propStr(f)} se cumple en ${count} de las 8 filas.`
+            );
+        }
+
+        function millB_impFalse() {
+            const letters = millShuffle(MILL_VARS.slice());
+            const a = letters[0], b = letters[1], c = letters[2];
+            const comboText = (vars, mask) => vars.map((v, i) => `${v} = ${mask & (1 << i) ? 'V' : 'F'}`).join(', ');
+            const kind = millPick(['imp', 'impNotA', 'impNotB', 'conjTrue', 'dispFalse', 'conj3', 'disp3']);
+
+            if (kind === 'imp' || kind === 'impNotA' || kind === 'impNotB') {
+                const forms = {
+                    imp: { label: `${a} → ${b}`, correctMask: 0b01, why: `${a} = V y ${b} = F` },
+                    impNotA: { label: `¬${a} → ${b}`, correctMask: 0b00, why: `${a} = F y ${b} = F` },
+                    impNotB: { label: `${a} → ¬${b}`, correctMask: 0b11, why: `${a} = V y ${b} = V` }
+                };
+                const form = forms[kind];
+                const poolMasks = millShuffle([0, 1, 2, 3].filter(m => m !== form.correctMask));
+                let i = 0;
+                return millFinish(
+                    'IMPLICACIÓN',
+                    `¿Cuándo es FALSA la proposición ${form.label}?`,
+                    { text: comboText([a, b], form.correctMask) },
+                    () => ({ text: comboText([a, b], poolMasks[(i++) % poolMasks.length]) }),
+                    null,
+                    `P → Q solo es falsa con P = V y Q = F: ${form.why}.`
+                );
+            }
+
+            const isConj = kind === 'conjTrue' || kind === 'conj3';
+            const k = (kind === 'conj3' || kind === 'disp3') ? 3 : 2;
+            const vars = letters.slice(0, k);
+            const signs = vars.map(() => Math.random() < 0.5);
+            const label = vars.map((v, i) => signs[i] ? v : '¬' + v).join(isConj ? ' ∧ ' : ' ∨ ');
+            let correctMask = 0;
+            vars.forEach((_, i) => {
+                const varVal = isConj ? signs[i] : !signs[i];
+                if (varVal) correctMask |= (1 << i);
+            });
+            const all = [];
+            for (let m = 0; m < (1 << k); m++) all.push(m);
+            const poolMasks = millShuffle(all.filter(m => m !== correctMask));
+            let i = 0;
+            return millFinish(
+                'CONDICIONES',
+                `¿Cuándo es ${isConj ? 'VERDADERA' : 'FALSA'} la proposición ${label}?`,
+                { text: comboText(vars, correctMask) },
+                () => ({ text: comboText(vars, poolMasks[(i++) % poolMasks.length]) }),
+                null,
+                isConj
+                    ? `Una conjunción solo es verdadera si todos los literales son V: ${comboText(vars, correctMask)}.`
+                    : `Una disyunción solo es falsa si todos los literales son F: ${comboText(vars, correctMask)}.`
+            );
+        }
+
+        function millB_phrase() {
+            const atoms = millShuffle(['llueve', 'estudia', 'aprueba', 'nieva', 'corre', 'come', 'salta', 'trabaja', 'juega', 'viaja']);
+            const A = atoms[0], B = atoms[1];
+            const letters = millShuffle(MILL_VARS.slice());
+            const l1 = letters[0], l2 = letters[1];
+            const forms = [
+                { s: `No ${A}`, n: ['not', l1] },
+                { s: `${A} y ${B}`, n: ['and', l1, l2] },
+                { s: `${A} o ${B}`, n: ['or', l1, l2] },
+                { s: `No (${A}) y (${B})`, n: ['and', ['not', l1], l2] },
+                { s: `${A} y no ${B}`, n: ['and', l1, ['not', l2]] },
+                { s: `No (${A} o ${B})`, n: ['not', ['or', l1, l2]] },
+                { s: `No (${A} y ${B})`, n: ['not', ['and', l1, l2]] },
+                { s: `Si ${A} entonces ${B}`, n: ['imp', l1, l2] },
+                { s: `${A} sólo si ${B}`, n: ['imp', l1, l2] },
+                { s: `${A} es equivalente a ${B}`, n: ['iff', l1, l2] },
+                { s: `No ${A} o ${B}`, n: ['or', ['not', l1], l2] }
+            ];
+            const f = millPick(forms);
+            const correct = millEntry(f.n);
+            return millFinish(
+                'TRADUCCIÓN ALGO',
+                `La frase «${f.s}» se representa lógicamente como:`,
+                correct,
+                () => millEntry(millRandFormula(2, [l1, l2])),
+                c => !propEquiv(c.node, f.n),
+                `«${f.s}» ≡ ${propStr(f.n)}`
+            );
+        }
+
+        function millB_sets() {
+            const kind = millPick(['inter', 'union', 'diff', 'cardUnion', 'cardInter']);
+            const nums = millShuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+            const sizeA = 3 + millRnd(2);
+            const sizeB = 3 + millRnd(2);
+            const A = nums.slice(0, sizeA).sort((x, y) => x - y);
+            const B = nums.slice(sizeA, sizeA + sizeB).sort((x, y) => x - y);
+            const setStr = s => '{' + s.join(', ') + '}';
+            const inter = A.filter(x => B.includes(x));
+            const uni = [...new Set([...A, ...B])].sort((x, y) => x - y);
+            const dAB = A.filter(x => !B.includes(x));
+            const dBA = B.filter(x => !A.includes(x));
+            const sym = [...new Set([...dAB, ...dBA])].sort((x, y) => x - y);
+
+            if (kind === 'cardUnion' || kind === 'cardInter') {
+                const target = kind === 'cardUnion' ? uni.length : inter.length;
+                const poolVals = millShuffle([
+                    A.length, B.length, A.length + B.length, A.length + B.length - 2 * inter.length,
+                    inter.length, dAB.length, dBA.length, sym.length, uni.length + inter.length,
+                    Math.abs(A.length - B.length), dAB.length + dBA.length, uni.length + 1
+                ].filter(v => v !== target && v >= 0));
+                let i = 0;
+                const name = kind === 'cardUnion' ? '|A ∪ B|' : '|A ∩ B|';
+                return millFinish(
+                    'CONJUNTOS',
+                    `Si A = ${setStr(A)} y B = ${setStr(B)}, ¿cuántos elementos tiene ${name}?`,
+                    { text: String(target), value: target },
+                    () => { const v = poolVals[i++ % poolVals.length]; return { text: String(v), value: v }; },
+                    null,
+                    kind === 'cardUnion'
+                        ? `|A ∪ B| = |A| + |B| − |A ∩ B| = ${A.length} + ${B.length} − ${inter.length} = ${target}.`
+                        : `A ∩ B = ${setStr(inter)}, así que tiene ${target} elemento${target === 1 ? '' : 's'}.`
+                );
+            }
+
+            let correctText, explain, candidates;
+            if (kind === 'inter') {
+                correctText = setStr(inter);
+                explain = `A ∩ B se queda solo con los elementos comunes: ${correctText}.`;
+                candidates = [uni, inter, dAB, dBA, sym];
+            } else if (kind === 'union') {
+                correctText = setStr(uni);
+                explain = `A ∪ B junta todos los elementos sin repetir: ${correctText}.`;
+                candidates = [uni, inter, dAB, dBA, sym];
+            } else {
+                correctText = setStr(dAB);
+                explain = `A − B quita de A lo que está en B: ${correctText}.`;
+                candidates = [uni, inter, dAB, dBA, sym];
+            }
+            const op = kind === 'inter' ? 'A ∩ B' : kind === 'union' ? 'A ∪ B' : 'A − B';
+            return millFinish(
+                'CONJUNTOS',
+                `Si A = ${setStr(A)} y B = ${setStr(B)}, ¿cuál es ${op}?`,
+                { text: correctText },
+                () => ({ text: setStr(millPick(candidates)) }),
+                null,
+                explain
+            );
+        }
+
+        const MILL_BUILDERS = {
+            phrase: millB_phrase,
+            evalTrue: millB_evalTrue,
+            equiv: millB_equiv,
+            negate: millB_negate,
+            tautology: millB_tautology,
+            contradiction: millB_contradiction,
+            contingency: millB_contingency,
+            countTrue: millB_countTrue,
+            impFalse: millB_impFalse,
+            sets: millB_sets
+        };
+
+        function millTemplatePool() {
+            if (millDifficulty === 'easy') return ['phrase', 'impFalse', 'sets', 'negate', 'evalTrue'];
+            if (millDifficulty === 'normal') return ['evalTrue', 'equiv', 'countTrue', 'tautology', 'negate', 'sets', 'impFalse', 'phrase'];
+            return ['equiv', 'negate', 'tautology', 'contradiction', 'contingency', 'countTrue', 'sets'];
+        }
+
+        // Generador principal: siempre distinto (firma única) y verificado
+        function generateMillionQuestion() {
+            const pool = millTemplatePool();
+            for (let attempt = 0; attempt < 50; attempt++) {
+                const name = millPick(pool);
+                if (attempt < 10 && name === millLastTemplate && pool.length > 1) continue;
+                let q = null;
+                try { q = MILL_BUILDERS[name](); } catch (err) { q = null; }
+                if (!q || !q.options || q.options.length !== 4 || q.correctIdx < 0 || q.correctIdx > 3) continue;
+                const sig = q.category + '|' + q.text + '|' + q.options.slice().sort().join(' ~ ');
+                if (millSeen.has(sig)) continue;
+                millSeen.add(sig);
+                if (millSeen.size > 500) millSeen.delete(millSeen.values().next().value);
+                millLastTemplate = name;
+                return q;
+            }
+            return {
+                category: 'LÓGICA PROPOSICIONAL',
+                text: '¿Cuál de estas proposiciones es una tautología?',
+                options: ['p ∨ ¬p', 'p ∧ ¬p', 'p → ¬p', 'p ∧ p'],
+                correctIdx: 0,
+                explain: 'p ∨ ¬p es siempre verdadera: es el principio del tercero excluido.'
+            };
+        }
+
+        // ---------------- Ciclo de juego ----------------
+        function hideMillionGameOver() {
+            const overlay = document.getElementById('million-gameover');
+            if (!overlay) return;
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+
+        function closeMillionGameOver() {
+            hideMillionGameOver();
+            if (currentMode === 'millonario') startMillionRun();
+        }
+
+        function restartMillionGame() {
+            playSFX('pickup');
+            startMillionRun();
+        }
+
+        function updateMillionDifficultyButtons() {
+            const defs = [
+                { id: 'btn-mil-easy', active: 'bg-emerald-500 text-slate-950', key: 'easy' },
+                { id: 'btn-mil-normal', active: 'bg-amber-400 text-slate-950', key: 'normal' },
+                { id: 'btn-mil-hard', active: 'bg-rose-500 text-white', key: 'hard' }
+            ];
+            defs.forEach(d => {
+                const el = document.getElementById(d.id);
+                if (!el) return;
+                el.className = d.key === millDifficulty
+                    ? `px-2.5 py-0.5 rounded-md text-[10px] font-bold transition ${d.active}`
+                    : 'px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800';
+            });
+        }
+
+        function setMillDifficulty(diff) {
+            millDifficulty = diff;
+            updateMillionDifficultyButtons();
+            if (currentMode !== 'millonario') return;
+            playSFX('pickup');
+            startMillionRun();
+        }
+
+        function updateMillionLivesButtons() {
+            [1, 2, 3].forEach(n => {
+                const el = document.getElementById('btn-mil-lives-' + n);
+                if (!el) return;
+                el.className = n === millLivesMax
+                    ? 'px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-rose-500 text-white'
+                    : 'px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800';
+            });
+        }
+
+        function setMillLives(n) {
+            millLivesMax = n;
+            updateMillionLivesButtons();
+            if (currentMode !== 'millonario') return;
+            playSFX('pickup');
+            startMillionRun();
+        }
+
+        function updateMillionLivesHUD() {
+            const el = document.getElementById('million-lives');
+            if (!el) return;
+            let html = '';
+            for (let i = 0; i < millLivesMax; i++) {
+                html += i < millLives
+                    ? '<i class="fa-solid fa-heart"></i>'
+                    : '<i class="fa-regular fa-heart text-slate-600"></i>';
+            }
+            el.innerHTML = html;
+        }
+
+        function refreshMillionReady() {
+            const answers = document.getElementById('million-answers');
+            if (answers) {
+                if (awaitingStart) answers.classList.add('opacity-50', 'pointer-events-none');
+                else answers.classList.remove('opacity-50', 'pointer-events-none');
+            }
+            updateMillionLifelines();
+        }
+
+        function updateMillionLifelines() {
+            const canUse = !millGameOver && !millLocked && !awaitingStart;
+            const b50 = document.getElementById('btn-mil-5050');
+            if (b50) {
+                const off = millFiftyUsed || !canUse;
+                b50.className = 'px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition border ' +
+                    (off ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-yellow-500/20 border-yellow-500/50 text-yellow-200 hover:bg-yellow-500/30');
+            }
+            const bPub = document.getElementById('btn-mil-public');
+            if (bPub) {
+                const off = millPublicUsed || !canUse;
+                bPub.className = 'px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition border ' +
+                    (off ? 'bg-slate-800 text-slate-500 border-slate-700' : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-200 hover:bg-emerald-500/30');
+            }
+            const top = getLeaderboard('millonario');
+            millSetText('million-best', top && top[0] ? String(top[0].score) : '0');
+        }
+
+        const MILL_ANSWER_BASE = 'hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10';
+        const MILL_LETTERS = ['A', 'B', 'C', 'D'];
+
+        function renderMillionQuestion() {
+            const q = millQuestion;
+            if (!q) return;
+            millSetText('million-category', q.category);
+            millSetText('million-rung', `${Math.min(millRung + 1, MILL_TOTAL)} / ${MILL_TOTAL}`);
+            millSetText('million-prize', millFormat(MILL_PRIZES[Math.min(millRung, MILL_TOTAL - 1)]) + ' pts');
+            millSetText('million-question', q.text);
+            millRemoved = new Set();
+            for (let i = 0; i < 4; i++) {
+                const b = document.getElementById('million-ans-' + i);
+                const t = document.getElementById('million-ans-text-' + i);
+                if (t) t.textContent = q.options[i];
+                if (b) {
+                    b.className = MILL_ANSWER_BASE;
+                    b.classList.remove('hidden');
+                    b.disabled = false;
+                }
+                const badge = document.getElementById('million-ans-letter-' + i);
+                if (badge) badge.className = 'w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center';
+            }
+            const exp = document.getElementById('million-explain');
+            if (exp) { exp.classList.add('hidden'); exp.textContent = ''; }
+            const pub = document.getElementById('million-public');
+            if (pub) { pub.classList.add('hidden'); pub.classList.remove('block'); }
+            updateMillionLifelines();
+        }
+
+        function nextMillionQuestion() {
+            millSeq++;
+            millQuestion = generateMillionQuestion();
+            millLocked = false;
+            roundTimer = millTime();
+            document.getElementById('hud-timer').textContent = `${roundTimer}s`;
+            updateBigTimer();
+            renderMillionQuestion();
+            refreshMillionReady();
+        }
+
+        function startMillionRun() {
+            millSeq++;
+            millGameOver = false;
+            millRung = 0;
+            millLives = millLivesMax;
+            millLocked = false;
+            millFiftyUsed = false;
+            millPublicUsed = false;
+            millQuestion = null;
+            modeScores.millonario = 0;
+            globalStreak = 0;
+            statHits = 0;
+            statMisses = 0;
+            document.getElementById('hud-score').textContent = '0';
+            document.getElementById('hud-streak').textContent = 'x1';
+            document.getElementById('hud-accuracy-stats').textContent = `✔ 0/${MILL_TOTAL}`;
+            roundTimer = millTime();
+            hideMillionGameOver();
+            updateMillionDifficultyButtons();
+            updateMillionLivesButtons();
+            updateMillionLivesHUD();
+            millQuestion = generateMillionQuestion();
+            renderMillionQuestion();
+            updateBigTimer();
+            armStartHint();
+            refreshMillionReady();
+        }
+
+        function showMillionExplain(text, ok) {
+            const el = document.getElementById('million-explain');
+            if (!el) return;
+            el.textContent = text;
+            el.className = 'text-[11px] leading-snug rounded-xl px-3 py-2 mono-font border ' +
+                (ok
+                    ? 'text-emerald-200 bg-emerald-950/85 border-emerald-500/40'
+                    : 'text-rose-200 bg-rose-950/85 border-rose-500/40');
+        }
+
+        function answerMillion(idx) {
+            if (awaitingStart && !landingVisible()) {
+                awaitingStart = false;
+                hideStartHint();
+                playSFX('pickup');
+                updateBigTimer();
+                refreshMillionReady();
+                return;
+            }
+            if (millGameOver || millLocked || !millQuestion) return;
+            if (idx < 0 || idx > 3 || millRemoved.has(idx)) return;
+
+            millLocked = true;
+            const seq = ++millSeq;
+            const q = millQuestion;
+            const correctIdx = q.correctIdx;
+            const isCorrect = idx === correctIdx;
+
+            const paint = (i, cls) => {
+                const b = document.getElementById('million-ans-' + i);
+                if (b) b.className = MILL_ANSWER_BASE + ' ' + cls;
+            };
+            paint(correctIdx, 'border-emerald-400 bg-emerald-500/25');
+            if (!isCorrect) paint(idx, 'border-rose-400 bg-rose-500/25');
+
+            if (isCorrect) {
+                millRung++;
+                modeScores.millonario = MILL_PRIZES[millRung - 1];
+                statHits++;
+                globalStreak++;
+                const mult = streakMultiplier(globalStreak);
+                playSFX('success');
+                showHitPopup(`+${millFormat(MILL_PRIZES[millRung - 1])}`, true, mult > 1 ? `x${mult} COMBO` : '¡CORRECTA!');
+                showMillionExplain(q.explain, true);
+                document.getElementById('hud-score').textContent = modeScores.millonario;
+                document.getElementById('hud-streak').textContent = `x${mult}`;
+                document.getElementById('hud-accuracy-stats').textContent = `✔ ${statHits}/${MILL_TOTAL}`;
+                if (millRung >= MILL_TOTAL) {
+                    setTimeout(() => { if (seq === millSeq) endMillionGame(true); }, 1500);
+                } else {
+                    setTimeout(() => { if (seq === millSeq) nextMillionQuestion(); }, 1700);
+                }
+            } else {
+                statMisses++;
+                globalStreak = 0;
+                playSFX('error');
+                showMillionExplain(`${q.explain}  →  La buena era la ${MILL_LETTERS[correctIdx]}.`, false);
+                document.getElementById('hud-streak').textContent = 'x1';
+                millLives = Math.max(0, millLives - 1);
+                updateMillionLivesHUD();
+                if (millLives > 0) {
+                    showHitPopup('-1 ❤️', false, `VIDAS RESTANTES: ${millLives}`);
+                    setTimeout(() => { if (seq === millSeq) nextMillionQuestion(); }, 2100);
+                } else {
+                    showHitPopup('¡SIN VIDAS!', false, 'FIN DEL JUEGO');
+                    setTimeout(() => { if (seq === millSeq) endMillionGame(false); }, 2100);
+                }
+            }
+            updateMillionLifelines();
+        }
+
+        function useMillionFifty() {
+            if (millFiftyUsed || millGameOver || millLocked || awaitingStart || !millQuestion) return;
+            millFiftyUsed = true;
+            playSFX('pickup');
+            const wrong = millShuffle([0, 1, 2, 3].filter(i => i !== millQuestion.correctIdx && !millRemoved.has(i)));
+            wrong.slice(0, 2).forEach(i => {
+                millRemoved.add(i);
+                const b = document.getElementById('million-ans-' + i);
+                if (b) b.classList.add('hidden');
+            });
+            updateMillionLifelines();
+        }
+
+        function useMillionPublic() {
+            if (millPublicUsed || millGameOver || millLocked || awaitingStart || !millQuestion) return;
+            millPublicUsed = true;
+            playSFX('pickup');
+            const visible = [0, 1, 2, 3].filter(i => !millRemoved.has(i));
+            const correctIdx = millQuestion.correctIdx;
+            const base = millDifficulty === 'easy' ? 0.72 : millDifficulty === 'normal' ? 0.58 : 0.45;
+            const correctW = Math.min(0.85, base + Math.random() * 0.12);
+            const others = visible.filter(i => i !== correctIdx);
+            const weights = {};
+            let total = 0;
+            others.forEach(i => { const v = Math.random() + 0.12; weights[i] = v; total += v; });
+            const pct = [0, 0, 0, 0];
+            let used = 0;
+            others.forEach(i => {
+                pct[i] = Math.round((weights[i] / total) * (1 - correctW) * 100);
+                used += pct[i];
+            });
+            if (visible.includes(correctIdx)) pct[correctIdx] = Math.max(0, 100 - used);
+
+            const rows = document.getElementById('million-public-rows');
+            if (rows) {
+                rows.innerHTML = visible.map(i => `
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 shrink-0 rounded bg-yellow-400 text-slate-950 text-[10px] font-extrabold flex items-center justify-center">${MILL_LETTERS[i]}</span>
+                        <div class="flex-1 h-3 bg-slate-800 rounded overflow-hidden">
+                            <div class="h-full bg-emerald-400 rounded" style="width:${pct[i]}%"></div>
+                        </div>
+                        <span class="mono-font text-[10px] font-bold text-slate-300 w-9 text-right">${pct[i]}%</span>
+                    </div>`).join('');
+            }
+            const box = document.getElementById('million-public');
+            if (box) { box.classList.remove('hidden'); box.classList.add('block'); }
+            updateMillionLifelines();
+        }
+
+        function millSafeScore(completed) {
+            if (completed >= 10) return MILL_SAFE[10];
+            if (completed >= 5) return MILL_SAFE[5];
+            return 0;
+        }
+
+        function handleMillionTimeout() {
+            if (millGameOver || millLocked || !millQuestion) return;
+            millLocked = true;
+            const seq = ++millSeq;
+            const q = millQuestion;
+            const correctIdx = q.correctIdx;
+            const b = document.getElementById('million-ans-' + correctIdx);
+            if (b) b.className = MILL_ANSWER_BASE + ' border-emerald-400 bg-emerald-500/25';
+            statMisses++;
+            globalStreak = 0;
+            playSFX('error');
+            showMillionExplain(`${q.explain}  →  Se acabó el tiempo. La buena era la ${MILL_LETTERS[correctIdx]}.`, false);
+            document.getElementById('hud-streak').textContent = 'x1';
+            millLives = Math.max(0, millLives - 1);
+            updateMillionLivesHUD();
+            if (millLives > 0) {
+                showHitPopup('¡TIEMPO!', false, `PIERDES UNA VIDA · QUEDAN ${millLives}`);
+                setTimeout(() => { if (seq === millSeq) nextMillionQuestion(); }, 2100);
+            } else {
+                showHitPopup('¡SIN VIDAS!', false, 'FIN DEL JUEGO');
+                setTimeout(() => { if (seq === millSeq) endMillionGame(false); }, 2100);
+            }
+            updateMillionLifelines();
+        }
+
+        function endMillionGame(won) {
+            if (millGameOver) return;
+            millGameOver = true;
+            millLocked = true;
+            millSeq++;
+            let finalScore = modeScores.millonario || 0;
+            if (!won) {
+                finalScore = millSafeScore(millRung);
+                modeScores.millonario = finalScore;
+                playSFX('error');
+                showHitPopup(won ? '' : '¡SE ACABÓ!', false, finalScore > 0 ? `PREMIO SEGURO: ${millFormat(finalScore)}` : 'SIN PREMIO');
+            } else {
+                playSFX('success');
+            }
+            roundTimer = 0;
+            document.getElementById('hud-timer').textContent = '0s';
+            updateBigTimer();
+            document.getElementById('hud-score').textContent = modeScores.millonario;
+            document.getElementById('hud-accuracy-stats').textContent = `✔ ${statHits}/${MILL_TOTAL}`;
+            savePlayerToLeaderboard();
+            renderLeaderboardUI();
+            updateMillionLifelines();
+
+            const overlay = document.getElementById('million-gameover');
+            if (overlay) {
+                const maxScore = getLeaderboard('millonario').reduce((m, p) => Math.max(m, p.score), 0);
+                millSetText('million-gameover-title', won ? '¡MILLÓN ALCANZADO!' : '¡FIN DEL JUEGO!');
+                const icon = document.getElementById('million-gameover-icon');
+                if (icon) icon.className = won
+                    ? 'fa-solid fa-crown text-yellow-300 text-4xl mb-3 animate-bounce'
+                    : 'fa-solid fa-hourglass-end text-yellow-300 text-4xl mb-3';
+                millSetText('million-gameover-score', `${millFormat(modeScores.millonario)} pts`);
+                millSetText('million-gameover-best', `${millFormat(Math.max(maxScore, modeScores.millonario))} pts`);
+                millSetText('million-gameover-answered', `${statHits} / ${MILL_TOTAL}`);
+                millSetText('million-gameover-prize', millFormat(millSafeScore(millRung)));
+                millSetText('million-gameover-msg', won
+                    ? '¡Increíble! Llegaste al millón con pura lógica proposicional.'
+                    : finalScore > 0
+                        ? `Respaldaste el escalón seguro: conservas ${millFormat(finalScore)} puntos.`
+                        : 'Casi... vuelve a intentarlo, las preguntas son siempre distintas.');
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+        }
+
+        // ---------------- Plató 3D (mesa a la derecha + chef) ----------------
+        function build3DMillionArena() {
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x141026, roughness: 0.55, metalness: 0.25 });
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(46, 0.5, 46), floorMat);
+            floor.position.y = -0.27;
+            floor.receiveShadow = true;
+            millionGroup.add(floor);
+
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xf59e0b, emissiveIntensity: 0.55, roughness: 0.35 });
+            [7.5, 11].forEach(r => {
+                const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.09, 8, 72), ringMat);
+                ring.rotation.x = -Math.PI / 2;
+                ring.position.y = 0.05;
+                ring.receiveShadow = true;
+                millionGroup.add(ring);
+            });
+
+            const stageMat = new THREE.MeshStandardMaterial({ color: 0x2a1f4a, roughness: 0.45, metalness: 0.2 });
+            const stage = new THREE.Mesh(new THREE.CylinderGeometry(9, 9.2, 0.1, 56), stageMat);
+            stage.position.y = -0.05;
+            stage.receiveShadow = true;
+            millionGroup.add(stage);
+
+            // Muro de fondo con tiras doradas
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x1c1533, roughness: 0.8 });
+            const wall = new THREE.Mesh(new THREE.BoxGeometry(34, 10, 0.6), wallMat);
+            wall.position.set(0, 5, -9.5);
+            wall.receiveShadow = true;
+            millionGroup.add(wall);
+            for (let i = -7; i <= 7; i++) {
+                const strip = new THREE.Mesh(new THREE.BoxGeometry(0.22, 9.4, 0.1),
+                    new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xf59e0b, emissiveIntensity: 0.45, roughness: 0.4 }));
+                strip.position.set(i * 2.2, 5, -9.15);
+                millionGroup.add(strip);
+            }
+
+            // Gran pantalla del plató
+            const screenFrame = new THREE.Mesh(new THREE.BoxGeometry(9.6, 5.4, 0.35),
+                new THREE.MeshStandardMaterial({ color: 0x0b0819, roughness: 0.6 }));
+            screenFrame.position.set(-3.4, 4.6, -9.0);
+            millionGroup.add(screenFrame);
+            const screenMat = new THREE.MeshStandardMaterial({ color: 0x111a3a, emissive: 0x1d4ed8, emissiveIntensity: 0.35, roughness: 0.3 });
+            const screen = new THREE.Mesh(new THREE.PlaneGeometry(9.0, 4.8), screenMat);
+            screen.position.set(-3.4, 4.6, -8.8);
+            millionGroup.add(screen);
+            millionAnimated.push({
+                update: (el) => { screenMat.emissiveIntensity = 0.28 + Math.abs(Math.sin(el * 1.4)) * 0.28; }
+            });
+
+            // Celosía superior con focos
+            const trussMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.6, roughness: 0.4 });
+            const truss = new THREE.Mesh(new THREE.BoxGeometry(24, 0.3, 0.3), trussMat);
+            truss.position.set(0, 8.4, -3);
+            millionGroup.add(truss);
+            const beamPositions = [[-7, -3], [-1.5, -2.5], [3.2, -2], [8, -3]];
+            const coneMat = new THREE.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.06, depthWrite: false, side: THREE.DoubleSide });
+            beamPositions.forEach((pos, i) => {
+                const fixture = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.4, 0.5, 12), trussMat);
+                fixture.position.set(pos[0], 8.1, pos[1]);
+                millionGroup.add(fixture);
+                const cone = new THREE.Mesh(new THREE.ConeGeometry(1.9, 7.4, 20, 1, true), coneMat);
+                cone.position.set(pos[0], 4.4, pos[1]);
+                millionGroup.add(cone);
+                millionAnimated.push({
+                    update: (el) => { cone.material.opacity = 0.045 + Math.abs(Math.sin(el * 2 + i)) * 0.04; }
+                });
+            });
+
+            // Mesa del presentador/contestante (derecha) + micrófono
+            const desk = new THREE.Group();
+            const deskTopMat = new THREE.MeshStandardMaterial({ color: 0x2c2350, roughness: 0.35, metalness: 0.35 });
+            const deskTop = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.16, 1.5), deskTopMat);
+            deskTop.position.y = 1.06;
+            deskTop.castShadow = true; deskTop.receiveShadow = true;
+            desk.add(deskTop);
+            const deskFront = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.0, 0.14),
+                new THREE.MeshStandardMaterial({ color: 0x1b1533, roughness: 0.7 }));
+            deskFront.position.set(0, 0.53, 0.68);
+            deskFront.castShadow = true;
+            desk.add(deskFront);
+            const trim = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.09, 0.09),
+                new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xf59e0b, emissiveIntensity: 0.6, roughness: 0.3 }));
+            trim.position.set(0, 0.98, 0.72);
+            desk.add(trim);
+            [-1.6, 1.6].forEach(sx => {
+                const side = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.0, 1.4),
+                    new THREE.MeshStandardMaterial({ color: 0x1b1533, roughness: 0.7 }));
+                side.position.set(sx, 0.5, 0);
+                side.castShadow = true;
+                desk.add(side);
+            });
+            desk.position.set(3.2, 0, 0.9);
+            millionGroup.add(desk);
+
+            const micBase = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.05, 14),
+                new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.5 }));
+            micBase.position.set(2.4, 1.17, 0.75);
+            millionGroup.add(micBase);
+            const micStem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8),
+                new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.7, roughness: 0.3 }));
+            micStem.position.set(2.4, 1.38, 0.75);
+            micStem.rotation.z = -0.3;
+            millionGroup.add(micStem);
+            const micHead = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12),
+                new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6 }));
+            micHead.position.set(2.32, 1.58, 0.75);
+            millionGroup.add(micHead);
+
+            // Público (siluetas) al fondo
+            const crowdColors = [0x1f2937, 0x27324a, 0x1e2a3d, 0x2d2440, 0x334155];
+            for (let row = 0; row < 2; row++) {
+                for (let i = 0; i < 15; i++) {
+                    const g = new THREE.Group();
+                    const bodyMatM = new THREE.MeshStandardMaterial({ color: millPick(crowdColors), roughness: 0.9 });
+                    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 1.0, 8), bodyMatM);
+                    body.position.y = 0.5;
+                    const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10),
+                        new THREE.MeshStandardMaterial({ color: 0xd9b48f, roughness: 0.85 }));
+                    head.position.y = 1.15;
+                    const aL = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.55, 6), bodyMatM);
+                    aL.position.set(-0.42, 0.72, 0); aL.rotation.z = 0.45;
+                    const aR = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.55, 6), bodyMatM);
+                    aR.position.set(0.42, 0.72, 0); aR.rotation.z = -0.45;
+                    g.add(body); g.add(head); g.add(aL); g.add(aR);
+                    g.position.set(-12 + i * 1.7 + (row ? 0.85 : 0), row === 1 ? 0.35 : 0, -7.6 + row * -1.4);
+                    millionGroup.add(g);
+                    const phase = Math.random() * Math.PI * 2;
+                    millionAnimated.push({
+                        update: (el) => { g.position.y = (row === 1 ? 0.35 : 0) + Math.abs(Math.sin(el * 1.8 + phase)) * 0.07; }
+                    });
+                }
+            }
+
+            // Monedas doradas flotantes
+            const coinMat = new THREE.MeshStandardMaterial({ color: 0xfcd34d, metalness: 0.9, roughness: 0.2, emissive: 0xb45309, emissiveIntensity: 0.35 });
+            const coinSpots = [[0.5, 3.4, -3.5], [6.5, 3.8, -4.5], [-2.5, 4.6, -5.5], [7.6, 2.6, -1.2], [1.8, 5.2, -6.5]];
+            coinSpots.forEach((c, i) => {
+                const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.07, 22), coinMat);
+                coin.rotation.x = Math.PI / 2;
+                coin.position.set(c[0], c[1], c[2]);
+                coin.castShadow = true;
+                millionGroup.add(coin);
+                millionAnimated.push({
+                    update: (el, dt) => {
+                        coin.rotation.z += dt * 1.6;
+                        coin.position.y = c[1] + Math.sin(el * 1.5 + i) * 0.25;
+                    }
+                });
+            });
+
+            // Luz propia del plató (con sombras)
+            const key = new THREE.DirectionalLight(0xfff3c4, 1.15);
+            key.position.set(-120 + 7, 12, 10);
+            key.target.position.set(-120 + 2, 1, 0);
+            key.castShadow = true;
+            key.shadow.mapSize.set(1024, 1024);
+            key.shadow.camera.left = -12;
+            key.shadow.camera.right = 12;
+            key.shadow.camera.top = 12;
+            key.shadow.camera.bottom = -12;
+            key.shadow.camera.near = 1;
+            key.shadow.camera.far = 45;
+            scene.add(key);
+            scene.add(key.target);
+
+            const warm = new THREE.PointLight(0xffc966, 1.15, 26, 2);
+            warm.position.set(-120 + 3.2, 4.6, 3);
+            scene.add(warm);
+            millionAnimated.push({ update: (el) => { warm.intensity = 1.05 + Math.sin(el * 2) * 0.15; } });
+
+            const cool = new THREE.PointLight(0x8b5cf6, 0.9, 30, 2);
+            cool.position.set(-120 - 7, 5, -5);
+            scene.add(cool);
+        }
+
+        function buildMillionShowcase(station) {
+            const g = new THREE.Group();
+            g.position.set(station.position.x, 0.3, station.position.z);
+            const gold = new THREE.MeshStandardMaterial({ color: 0xfcd34d, metalness: 0.85, roughness: 0.22, emissive: 0xb45309, emissiveIntensity: 0.3 });
+            const dark = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6 });
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.62, 0.3, 18), dark);
+            base.position.y = 0.15; base.castShadow = true; g.add(base);
+            const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.18, 0.4, 12), gold);
+            stem.position.y = 0.48; stem.castShadow = true; g.add(stem);
+            const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.2, 0.52, 18), gold);
+            cup.position.y = 0.93; cup.castShadow = true; g.add(cup);
+            const rim = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.06, 8, 22), gold);
+            rim.rotation.x = Math.PI / 2; rim.position.y = 1.19; g.add(rim);
+            [-0.52, 0.52].forEach(sx => {
+                const handle = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.045, 8, 16), gold);
+                handle.position.set(sx, 1.0, 0);
+                handle.rotation.y = Math.PI / 2;
+                g.add(handle);
+            });
+            const glow = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10),
+                new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
+            glow.position.y = 1.45;
+            g.add(glow);
+            hubGroup.add(g);
+            station.showcase = { group: g, spinSpeed: 0.7, glow };
+        }
+
+        // ============================================================
         //  PLAYGROUND HUB (patio de juegos)
         // ============================================================
         function addHubStation(type, mode, x, z, labelText, color) {
@@ -3367,15 +4525,10 @@
         function buildSkinRoom(station) {
             const g = new THREE.Group();
             g.position.set(station.position.x, 0, station.position.z);
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xf5d0fe, roughness: 0.85 });
             const frameMat = new THREE.MeshStandardMaterial({ color: 0x7e22ce, roughness: 0.6 });
             const floor = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 6), new THREE.MeshStandardMaterial({ color: 0xe9d5ff, roughness: 0.7 }));
             floor.position.y = 0.1; floor.receiveShadow = true; g.add(floor);
-            // Two side walls, open toward the camera (approach side)
-            const left = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 6), wallMat);
-            left.position.set(-3, 1.75, 0); left.receiveShadow = true; g.add(left);
-            const right = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3.5, 6), wallMat);
-            right.position.set(3, 1.75, 0); right.receiveShadow = true; g.add(right);
+            // Open room: no side walls
             // Vanity + mirror at the back (facing the camera/approach)
             const tableTop = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.25, 1.1), frameMat);
             tableTop.position.set(0, 1.0, -2.2); tableTop.castShadow = true; g.add(tableTop);
@@ -3435,6 +4588,8 @@
             addHedge(-HX, 0, 0.8, HZ * 2);
             addHedge(HX, 0, 0.8, HZ * 2);
 
+            buildHubWater(HX, HZ);
+
             // Trees around the edges
             const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.9 });
             const leafMat = new THREE.MeshStandardMaterial({ color: 0x3f9142, roughness: 0.85 });
@@ -3487,10 +4642,12 @@
             // Game portals (back of the patio) + skin room
             const cocinaStation = addHubStation('portal', 'overcooked', -9, -13, '🍳 Cocina 3D', 0xf59e0b);
             const aimStation = addHubStation('portal', 'aim', 9, -13, '🎯 Aim 3D', 0xf43f5e);
-            const connectStation = addHubStation('portal', 'connect', 0, -15, '🔌 Conecta', 0x10b981);
+            const connectStation = addHubStation('portal', 'connect', 0, -15, '🔌 Conecta',   0x10b981);
+            const millStation = addHubStation('portal', 'millonario', -14, -10, '💰 Millonario', 0xfacc15);
             buildChefFireShowcase(cocinaStation);
             buildGunShowcase(aimStation);
             buildTowersShowcase(connectStation);
+            buildMillionShowcase(millStation);
 
             const skinStation = addHubStation('skin', null, 13, -6, '👕 Vestidor', 0xa855f7);
             buildSkinRoom(skinStation);
@@ -3520,6 +4677,217 @@
             });
 
             buildHubAmbient();
+        }
+
+        // ============================================================
+        //  WATER SURROUNDING THE HUB ISLAND + DECORATIONS
+        // ============================================================
+        function buildHubWater(HX, HZ) {
+            // Big animated sea plane surrounding the island
+            const seaGeo = new THREE.PlaneGeometry(HX * 8, HZ * 9, 48, 48);
+            const seaMat = new THREE.MeshStandardMaterial({
+                color: 0x1d7bb8, roughness: 0.25, metalness: 0.15,
+                emissive: 0x0c4a6e, emissiveIntensity: 0.25,
+                transparent: true, opacity: 0.92, side: THREE.DoubleSide
+            });
+            const sea = new THREE.Mesh(seaGeo, seaMat);
+            sea.rotation.x = -Math.PI / 2;
+            sea.position.y = -0.55;
+            sea.receiveShadow = false;
+            hubGroup.add(sea);
+            const seaBase = seaGeo.attributes.position.array.slice();
+            hubAnimated.push({
+                update: (el) => {
+                    const arr = seaGeo.attributes.position.array;
+                    for (let i = 0; i < arr.length; i += 3) {
+                        const x = seaBase[i], y = seaBase[i + 1];
+                        arr[i + 2] = Math.sin(x * 0.35 + el * 1.4) * 0.18 + Math.cos(y * 0.3 + el * 1.1) * 0.14;
+                    }
+                    seaGeo.attributes.position.needsUpdate = true;
+                }
+            });
+
+            // Foam ring hugging the island shore
+            const foamMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.45, side: THREE.DoubleSide });
+            const foamRings = [];
+            const addFoam = (x, z, w, d) => {
+                const f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), foamMat.clone());
+                f.rotation.x = -Math.PI / 2;
+                f.position.set(x, -0.42, z);
+                hubGroup.add(f);
+                foamRings.push(f);
+            };
+            addFoam(0, -HZ - 1.4, HX * 2 + 6, 2.2);
+            addFoam(0, HZ + 1.4, HX * 2 + 6, 2.2);
+            addFoam(-HX - 1.4, 0, 2.2, HZ * 2 + 6);
+            addFoam(HX + 1.4, 0, 2.2, HZ * 2 + 6);
+            hubAnimated.push({
+                update: (el) => {
+                    foamRings.forEach((f, i) => { f.material.opacity = 0.28 + Math.abs(Math.sin(el * 1.6 + i * 1.3)) * 0.25; });
+                }
+            });
+
+            // ---------- Wooden dock on the south shore ----------
+            const dockMatW = new THREE.MeshStandardMaterial({ color: 0xa1683a, roughness: 0.85 });
+            const dock = new THREE.Group();
+            for (let i = 0; i < 8; i++) {
+                const plank = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.12, 0.72), dockMatW);
+                plank.position.set(0, 0.25, i * 0.82);
+                plank.castShadow = true; plank.receiveShadow = true;
+                dock.add(plank);
+            }
+            [-1.1, 1.1].forEach(px => {
+                [0.3, 2.8, 5.4].forEach(pz => {
+                    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 1.6, 8), dockMatW);
+                    post.position.set(px, -0.3, pz);
+                    dock.add(post);
+                });
+            });
+            dock.position.set(5, 0, HZ + 1.2);
+            hubGroup.add(dock);
+
+            // Moored rowboat next to the dock
+            const boat1 = new THREE.Group();
+            const hull1 = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.55, 3.0), new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.55 }));
+            hull1.position.y = 0.1; hull1.castShadow = true; boat1.add(hull1);
+            const inner1 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.35, 2.5), new THREE.MeshStandardMaterial({ color: 0x7f1d1d, roughness: 0.7 }));
+            inner1.position.y = 0.25; boat1.add(inner1);
+            const seat1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.08, 0.4), dockMatW);
+            seat1.position.y = 0.4; boat1.add(seat1);
+            boat1.position.set(7.4, -0.25, HZ + 4.2);
+            boat1.rotation.y = 0.35;
+            hubGroup.add(boat1);
+            hubAnimated.push({
+                update: (el) => {
+                    boat1.position.y = -0.25 + Math.sin(el * 1.3) * 0.1;
+                    boat1.rotation.z = Math.sin(el * 0.9) * 0.06;
+                    boat1.rotation.x = Math.cos(el * 1.1) * 0.04;
+                }
+            });
+
+            // ---------- Drifting rowboats further out ----------
+            [[-HX - 12, -8, 0x3b82f6, 1.2], [HX + 14, 6, 0xf59e0b, -0.8], [-HX - 10, 14, 0x22c55e, 2.4]].forEach((b, bi) => {
+                const boat = new THREE.Group();
+                const hull = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.55, 3.2), new THREE.MeshStandardMaterial({ color: b[2], roughness: 0.55 }));
+                hull.position.y = 0.1; hull.castShadow = true; boat.add(hull);
+                const inner = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.35, 2.7), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.7 }));
+                inner.position.y = 0.25; boat.add(inner);
+                const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 6), dockMatW);
+                mast.position.y = 1.2; boat.add(mast);
+                const sail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.4, 1.2), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8, side: THREE.DoubleSide }));
+                sail.position.set(0, 1.3, 0.55); boat.add(sail);
+                boat.position.set(b[0], -0.3, b[1]);
+                boat.rotation.y = b[3];
+                hubGroup.add(boat);
+                hubAnimated.push({
+                    update: (el) => {
+                        boat.position.y = -0.3 + Math.sin(el * 1.1 + bi * 2) * 0.12;
+                        boat.position.x = b[0] + Math.sin(el * 0.25 + bi * 2.2) * 1.6;
+                        boat.rotation.z = Math.sin(el * 0.8 + bi) * 0.07;
+                        boat.rotation.y = b[3] + Math.sin(el * 0.3 + bi) * 0.15;
+                    }
+                });
+            });
+
+            // ---------- Buoys bobbing on the water ----------
+            const buoyBodies = [];
+            [[-HX - 7, -16], [HX + 8, -14], [-HX - 15, 2], [HX + 16, 16], [-HX - 6, 20], [HX + 6, 22], [4, HZ + 14], [-10, -HZ - 12]].forEach((p, i) => {
+                const g = new THREE.Group();
+                const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 10), new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 }));
+                body.scale.set(1, 1.15, 1); body.castShadow = true; g.add(body);
+                const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.1, 8, 18), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 }));
+                stripe.rotation.x = Math.PI / 2; g.add(stripe);
+                const top = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.55, 8), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 }));
+                top.position.y = 0.85; g.add(top);
+                const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfff3c4, emissive: 0xffca28, emissiveIntensity: 0.9 }));
+                lamp.position.y = 1.2; g.add(lamp);
+                g.position.set(p[0], -0.35, p[1]);
+                hubGroup.add(g);
+                buoyBodies.push({ g, baseY: -0.35, phase: i * 0.9, lamp });
+            });
+            hubAnimated.push({
+                update: (el) => {
+                    buoyBodies.forEach(b => {
+                        b.g.position.y = b.baseY + Math.sin(el * 1.6 + b.phase) * 0.14;
+                        b.g.rotation.z = Math.sin(el * 1.2 + b.phase) * 0.1;
+                        b.g.rotation.x = Math.cos(el * 1.0 + b.phase) * 0.08;
+                        b.lamp.material.emissiveIntensity = 0.6 + Math.abs(Math.sin(el * 3 + b.phase)) * 0.6;
+                    });
+                }
+            });
+
+            // ---------- Small sand islands with palm trees ----------
+            const sandMat = new THREE.MeshStandardMaterial({ color: 0xf3d9a4, roughness: 0.9 });
+            const palmTrunkMat = new THREE.MeshStandardMaterial({ color: 0x9a6b3f, roughness: 0.85 });
+            const palmLeafMat = new THREE.MeshStandardMaterial({ color: 0x2f9e44, roughness: 0.8, side: THREE.DoubleSide });
+            const addIsland = (x, z, r, palms) => {
+                const isle = new THREE.Group();
+                const sand = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.8, r, 1.0, 16), sandMat);
+                sand.position.y = -0.35; sand.castShadow = true; sand.receiveShadow = true; isle.add(sand);
+                const grass = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.65, r * 0.75, 0.25, 16), new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.9 }));
+                grass.position.y = 0.22; isle.add(grass);
+                for (let pi = 0; pi < palms; pi++) {
+                    const palm = new THREE.Group();
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.28, 3.0, 8), palmTrunkMat);
+                    trunk.position.y = 1.5; trunk.rotation.z = 0.12 + pi * 0.05; trunk.castShadow = true; palm.add(trunk);
+                    for (let k = 0; k < 6; k++) {
+                        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2.2, 4), palmLeafMat);
+                        leaf.scale.set(1, 1, 0.22);
+                        const ang = (k / 6) * Math.PI * 2;
+                        leaf.position.set(Math.cos(ang) * 0.75, 3.0, Math.sin(ang) * 0.75);
+                        leaf.rotation.z = -Math.cos(ang) * 1.1;
+                        leaf.rotation.x = Math.sin(ang) * 1.1;
+                        palm.add(leaf);
+                    }
+                    const coco = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 8), new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.85 }));
+                    coco.position.set(0.25, 2.85, 0.1); palm.add(coco);
+                    palm.position.set(Math.cos(pi * 2.4) * r * 0.35, 0.2, Math.sin(pi * 2.4) * r * 0.35);
+                    isle.add(palm);
+                }
+                isle.position.set(x, 0, z);
+                hubGroup.add(isle);
+            };
+            addIsland(-HX - 16, -18, 4.2, 2);
+            addIsland(HX + 18, -20, 3.4, 1);
+            addIsland(HX + 14, 24, 2.6, 1);
+            addIsland(-HX - 20, 16, 3.0, 1);
+
+            // ---------- Rocks sticking out of the water ----------
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.95 });
+            [[-HX - 5, -22, 1.2], [HX + 5, -18, 0.9], [-HX - 18, -4, 1.5], [HX + 22, 0, 1.1], [-HX - 8, 24, 0.8], [HX + 10, 28, 1.3]].forEach(r => {
+                const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(r[2], 0), rockMat);
+                rock.position.set(r[0], -r[2] * 0.35, r[1]);
+                rock.rotation.set(Math.random(), Math.random(), Math.random());
+                rock.castShadow = true;
+                hubGroup.add(rock);
+            });
+
+            // ---------- Seagulls circling above the water ----------
+            const gullMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6, side: THREE.DoubleSide });
+            const gulls = [];
+            for (let i = 0; i < 7; i++) {
+                const gl = new THREE.Group();
+                const bodyG = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), gullMat);
+                bodyG.scale.set(1, 0.65, 1.7); gl.add(bodyG);
+                const wl = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.32), gullMat);
+                const wr = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.05, 0.32), gullMat);
+                wl.position.x = -0.6; wr.position.x = 0.6;
+                gl.add(wl); gl.add(wr);
+                hubGroup.add(gl);
+                gulls.push({ gl, wl, wr, r: 26 + i * 4.5, h: 8 + (i % 3) * 2.2, speed: 0.22 + i * 0.035, phase: i * 1.9 });
+            }
+            hubAnimated.push({
+                update: (el) => {
+                    gulls.forEach(g => {
+                        const a = el * g.speed + g.phase;
+                        g.gl.position.set(Math.cos(a) * g.r, g.h + Math.sin(el * 1.5 + g.phase) * 0.5, Math.sin(a) * g.r);
+                        g.gl.rotation.y = -a;
+                        const flap = Math.sin(el * 8 + g.phase) * 0.55;
+                        g.wl.rotation.z = flap;
+                        g.wr.rotation.z = -flap;
+                    });
+                }
+            });
         }
 
         function buildHubAmbient() {
@@ -3949,9 +5317,12 @@
         function switchGameMode(mode) {
             playSFX('pickup');
             currentMode = mode;
+            document.body.className = document.body.className
+                .replace(/\bmode-\S+/g, '').trim() + ' mode-' + mode;
             if (mode !== 'overcooked') { setCrowdWarning(false); clearCrowdPeople(); kitchenCrowd = null; hideKitchenGameOver(); }
             if (mode !== 'aim') hideAimGameOver();
             if (mode !== 'connect') hideConnectGameOver();
+            if (mode !== 'millonario') hideMillionGameOver();
 
             // Sky/fog: daytime park in the hub, Duck Hunt sky for aim, dark arena elsewhere
             if (mode === 'hub') {
@@ -3966,6 +5337,10 @@
                 scene.background.set(0x061019);
                 scene.fog.color.set(0x061019);
                 scene.fog.density = 0.018;
+            } else if (mode === 'millonario') {
+                scene.background.set(0x0b0714);
+                scene.fog.color.set(0x0b0714);
+                scene.fog.density = 0.013;
             } else {
                 scene.background.set(0x090d16);
                 scene.fog.color.set(0x090d16);
@@ -3974,7 +5349,7 @@
             aimGun.visible = (mode === 'aim');
 
             // Keep the sun's shadow frustum over the active arena
-            pointSunAt(mode === 'hub' ? 150 : 0);
+            pointSunAt(mode === 'hub' ? 150 : mode === 'millonario' ? -120 : 0);
 
             // The chef model travels with the player: hub and kitchen share it
             if (chefMesh) {
@@ -3984,6 +5359,12 @@
                     chefMesh.rotation.y = 0;
                     chefVel.set(0, 0, 0);
                     hubNearStation = null;
+                } else if (mode === 'millonario') {
+                    // Detrás de la mesa del plató, a la derecha y mirando a cámara
+                    if (chefMesh.parent !== millionGroup) millionGroup.add(chefMesh);
+                    chefMesh.position.set(3.2, 0, -0.35);
+                    chefMesh.rotation.y = 0;
+                    chefVel.set(0, 0, 0);
                 } else if (chefMesh.parent !== kitchenGroup) {
                     kitchenGroup.add(chefMesh);
                 }
@@ -3993,7 +5374,8 @@
                 { id: 'hub', btn: 'btn-mode-hub', activeClass: 'bg-lime-500 text-slate-950 shadow-md' },
                 { id: 'overcooked', btn: 'btn-mode-overcooked', activeClass: 'bg-amber-500 text-slate-950 shadow-md' },
                 { id: 'aim', btn: 'btn-mode-aim', activeClass: 'bg-rose-500 text-white shadow-md' },
-                { id: 'connect', btn: 'btn-mode-connect', activeClass: 'bg-emerald-500 text-slate-950 shadow-md' }
+                { id: 'connect', btn: 'btn-mode-connect', activeClass: 'bg-emerald-500 text-slate-950 shadow-md' },
+                { id: 'millonario', btn: 'btn-mode-millonario', activeClass: 'bg-yellow-400 text-slate-950 shadow-md' }
             ];
 
             modes.forEach(m => {
@@ -4013,6 +5395,8 @@
             const quickConnect = document.getElementById('connect-quick-actions');
             const quickAim = document.getElementById('aim-quick-actions');
             const quickHub = document.getElementById('hub-quick-actions');
+            const quickMillion = document.getElementById('million-quick-actions');
+            const millionPanel = document.getElementById('million-panel');
             const crosshair = document.getElementById('fps-crosshair');
             const controlsHint = document.getElementById('hud-controls-hint');
             const ticketHeader = document.getElementById('ticket-header-strip');
@@ -4022,6 +5406,8 @@
 
             if (quickAim) { quickAim.classList.add('hidden'); quickAim.classList.remove('flex'); }
             if (quickHub) { quickHub.classList.add('hidden'); quickHub.classList.remove('flex'); }
+            if (quickMillion) { quickMillion.classList.add('hidden'); quickMillion.classList.remove('flex'); }
+            if (millionPanel) { millionPanel.classList.add('hidden'); millionPanel.classList.remove('flex'); }
             if (hubPrompt) { hubPrompt.classList.add('hidden'); hubPrompt.classList.remove('flex'); }
             const skinPanel = document.getElementById('skin-panel');
             if (skinPanel) { skinPanel.classList.add('hidden'); skinPanel.classList.remove('flex'); }
@@ -4094,6 +5480,23 @@
                 document.getElementById('hud-accuracy-stats').textContent = '✔ 0 | ✖ 0';
                 hideConnectGameOver();
                 spawn3DConnectNodes();
+            } else if (mode === 'millonario') {
+                camTargetPos.set(-120 - 0.6, 2.35, 9.4);
+                camLookAtPos.set(-120 - 1.5, 1.5, 0);
+                quickKitchen.classList.add('hidden');
+                quickConnect.classList.add('hidden');
+                quickConnect.classList.remove('flex');
+                if (quickMillion) { quickMillion.classList.remove('hidden'); quickMillion.classList.add('flex'); }
+                if (millionPanel) { millionPanel.classList.remove('hidden'); millionPanel.classList.add('flex'); }
+                ticketCard.classList.add('hidden');
+                crosshair.classList.add('hidden');
+                crosshair.classList.remove('flex');
+                container.className = 'pointer-mode';
+                hideMillionGameOver();
+                updateMillionDifficultyButtons();
+                if (controlsHint) controlsHint.innerHTML = `<kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-yellow-300">Clic</kbd> Elegir respuesta • <kbd class="px-1.5 py-0.5 bg-yellow-400 text-slate-950 font-bold rounded">1-4</kbd> Atajos de teclado • <kbd class="px-1.5 py-0.5 bg-yellow-400 text-slate-950 font-bold rounded">B</kbd> Bailar`;
+                document.getElementById('static-mode-badge').textContent = 'MILLONARIO • LÓGICA';
+                startMillionRun();
             }
 
             updateBigTimer();
@@ -4116,6 +5519,8 @@
                 connectGameOver = false;
                 hideConnectGameOver();
                 spawn3DConnectNodes();
+            } else if (currentMode === 'millonario') {
+                if (!millGameOver && !millLocked) nextMillionQuestion();
             }
             updateBigTimer();
         }
@@ -4154,6 +5559,7 @@
                 hideStartHint();
                 playSFX('pickup');
                 updateBigTimer();
+                refreshMillionReady();
             }
 
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -4215,11 +5621,13 @@
 
         window.addEventListener('keydown', (e) => {
             if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+            const wasAwaitingStart = awaitingStart;
             if (awaitingStart && !landingVisible()) {
                 awaitingStart = false;
                 hideStartHint();
                 playSFX('pickup');
                 updateBigTimer();
+                refreshMillionReady();
             }
             const k = e.key.toLowerCase();
             if (k === 'w' || e.key === 'ArrowUp') chefKeys.w = true;
@@ -4238,9 +5646,12 @@
                 e.preventDefault();
                 deliverKitchenOrder();
             }
-            if (k === 'b' && (currentMode === 'overcooked' || currentMode === 'hub')) {
+            if (k === 'b' && (currentMode === 'overcooked' || currentMode === 'hub' || currentMode === 'millonario')) {
                 e.preventDefault();
                 triggerGangnamStyle();
+            }
+            if (currentMode === 'millonario' && !wasAwaitingStart && e.key >= '1' && e.key <= '4') {
+                answerMillion(parseInt(e.key, 10) - 1);
             }
         });
 
@@ -4252,11 +5663,27 @@
             if (k === 'd' || e.key === 'ArrowRight') chefKeys.d = false;
         });
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
+        // Mantiene el FOV horizontal roughly constante: en pantallas estrechas
+        // (móviles verticales) amplía el FOV vertical para que quepa la escena.
+        const MILL_CAM_BASE_FOV = 50;
+        const MILL_CAM_BASE_ASPECT = 16 / 9;
+        function updateCameraViewport() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            camera.aspect = w / h;
+            if (camera.aspect < MILL_CAM_BASE_ASPECT) {
+                const hHalf = Math.atan(Math.tan(THREE.MathUtils.degToRad(MILL_CAM_BASE_FOV) / 2) * MILL_CAM_BASE_ASPECT);
+                camera.fov = Math.min(85, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hHalf) / camera.aspect)));
+            } else {
+                camera.fov = MILL_CAM_BASE_FOV;
+            }
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+            renderer.setSize(w, h);
+        }
+
+        window.addEventListener('resize', updateCameraViewport);
+        window.addEventListener('orientationchange', () => setTimeout(updateCameraViewport, 250));
+        updateCameraViewport();
 
         setInterval(() => {
             if (awaitingStart) return;
@@ -4264,6 +5691,7 @@
             if (currentMode === 'overcooked' && kitchenGameOver) return;
             if (currentMode === 'aim' && aimGameOver) return;
             if (currentMode === 'connect' && connectGameOver) return;
+            if (currentMode === 'millonario' && (millGameOver || millLocked)) return;
             let tickStep = 1;
             if (currentMode === 'connect') {
                 if (statHits >= 6) tickStep = 4;
@@ -4277,6 +5705,8 @@
                     endAimGame();
                 } else if (currentMode === 'connect') {
                     endConnectGame();
+                } else if (currentMode === 'millonario') {
+                    handleMillionTimeout();
                 } else {
                     recordOutcome(0, false, 'Tiempo de la ronda agotado. Generando nuevo desafío...');
                     triggerNewChallenge();
@@ -4327,6 +5757,8 @@
                         s.npcModel.body.position.y = Math.abs(Math.sin(elapsed * 2.2)) * 0.12;
                         s.npcModel.legL.rotation.x = Math.sin(elapsed * 2.2) * 0.3;
                         s.npcModel.legR.rotation.x = -Math.sin(elapsed * 2.2) * 0.3;
+                        if (s.npcModel.armL) s.npcModel.armL.rotation.x = -Math.sin(elapsed * 2.2) * 0.25;
+                        if (s.npcModel.armR) s.npcModel.armR.rotation.x = Math.sin(elapsed * 2.2) * 0.25;
                     }
                     const sc = s.showcase;
                     if (!sc) return;
@@ -4352,6 +5784,11 @@
                     c.position.x += c.userData.speed * dt;
                     if (c.position.x > 36) c.position.x = -36;
                 });
+            }
+
+            if (currentMode === 'millonario') {
+                if (chefMesh) animateChef(dt, elapsed);
+                for (let mi = 0; mi < millionAnimated.length; mi++) millionAnimated[mi].update(elapsed, dt);
             }
 
             updateAimBullets(dt);
@@ -4395,6 +5832,7 @@
             build3DKitchenArena();
             build3DAimArena();
             build3DConnectArena();
+            build3DMillionArena();
             build3DHubArena();
             buildAimGun();
             renderLeaderboardUI();

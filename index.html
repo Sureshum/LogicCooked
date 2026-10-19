@@ -12,7 +12,7 @@
     <script src="vendor/three.min.js"></script>
     <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="src/style.css?v=21">
+    <link rel="stylesheet" href="src/style.css?v=22">
 
 </head>
 
@@ -146,28 +146,33 @@
                     <button onclick="switchGameMode('hub')" id="btn-mode-hub"
                         class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 bg-lime-500 text-slate-950 shadow">
                         <i class="fa-solid fa-tree"></i>
-                        <span>0. Patio</span>
+                        <span class="mode-btn-label">0. Patio</span>
                     </button>
                     <button onclick="switchGameMode('overcooked')" id="btn-mode-overcooked"
                         class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
                         <i class="fa-solid fa-kitchen-set"></i>
-                        <span>1. Cocina</span>
+                        <span class="mode-btn-label">1. Cocina</span>
                     </button>
                     <button onclick="switchGameMode('aim')" id="btn-mode-aim"
                         class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
                         <i class="fa-solid fa-crosshairs text-rose-400"></i>
-                        <span>2. Aim 3D</span>
+                        <span class="mode-btn-label">2. Aim 3D</span>
                     </button>
                     <button onclick="switchGameMode('connect')" id="btn-mode-connect"
                         class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
                         <i class="fa-solid fa-plug-circle-bolt text-emerald-400"></i>
-                        <span>3. Conecta</span>
+                        <span class="mode-btn-label">3. Conecta</span>
+                    </button>
+                    <button onclick="switchGameMode('millonario')" id="btn-mode-millonario"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-sack-dollar text-yellow-300"></i>
+                        <span class="mode-btn-label">4. Millonario</span>
                     </button>
                 </div>
             </div>
 
             <!-- Static Mode Indicator -->
-            <div class="flex items-center gap-2 bg-slate-950/95 border border-slate-700/80 rounded-xl px-3.5 py-1">
+            <div class="mode-indicator flex items-center gap-2 bg-slate-950/95 border border-slate-700/80 rounded-xl px-3.5 py-1">
                 <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                 <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Modo Activo:</span>
                 <span id="static-mode-badge"
@@ -273,7 +278,121 @@
                 <span>Nuevos Nodos</span>
             </button>
         </div>
+
+        <!-- Row 2 Alternative: Millonario Quick Actions -->
+        <div id="million-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-gauge-high mr-1 text-yellow-300"></i>Dificultad:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setMillDifficulty('easy')" id="btn-mil-easy"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-emerald-500 text-slate-950">Fácil</button>
+                <button onclick="setMillDifficulty('normal')" id="btn-mil-normal"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Normal</button>
+                <button onclick="setMillDifficulty('hard')" id="btn-mil-hard"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-heart mr-1 text-rose-400"></i>Vidas:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setMillLives(3)" id="btn-mil-lives-3"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-rose-500 text-white">3</button>
+                <button onclick="setMillLives(2)" id="btn-mil-lives-2"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">2</button>
+                <button onclick="setMillLives(1)" id="btn-mil-lives-1"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">1</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-hand-sparkles mr-1 text-yellow-300"></i>Comodines:</span>
+            <button onclick="useMillionFifty()" id="btn-mil-5050"
+                class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition border bg-yellow-500/20 border-yellow-500/50 text-yellow-200 hover:bg-yellow-500/30">
+                50 : 50
+            </button>
+            <button onclick="useMillionPublic()" id="btn-mil-public"
+                class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition border bg-emerald-500/20 border-emerald-500/50 text-emerald-200 hover:bg-emerald-500/30">
+                <i class="fa-solid fa-people-group mr-0.5"></i>Público
+            </button>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300">Mejor:</span>
+            <span id="million-best" class="mono-font font-extrabold text-yellow-300 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">0</span>
+            <span class="text-yellow-200/80 font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i>Escalera hasta el millón</span>
+        </div>
     </header>
+
+    <!-- MILLONARIO: PANEL DE PREGUNTA (IZQUIERDA) -->
+    <aside id="million-panel"
+        class="hud-interactive hidden flex-col gap-2.5 fixed top-24 left-4 z-30 w-[min(30rem,94vw)] glass-panel rounded-2xl p-4 border border-yellow-500/30 shadow-2xl">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-2 min-w-0">
+                <i class="fa-solid fa-sack-dollar text-yellow-300 text-lg"></i>
+                <span id="million-category"
+                    class="text-[10px] uppercase tracking-widest font-extrabold text-yellow-300 bg-yellow-500/10 border border-yellow-500/40 rounded-md px-2 py-0.5 truncate">LÓGICA</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px]">
+                <span class="bg-slate-950/90 border border-rose-500/40 rounded-md px-2 py-0.5 flex items-center gap-1"
+                    title="Vidas restantes">
+                    <span id="million-lives" class="flex items-center gap-0.5 text-rose-400 text-[11px]"></span>
+                </span>
+                <span class="text-slate-400 font-bold">Pregunta
+                    <span id="million-rung" class="mono-font text-white font-extrabold">1 / 15</span>
+                </span>
+                <span class="bg-slate-950/90 border border-yellow-500/40 rounded-md px-2 py-0.5">
+                    <span class="text-slate-400 text-[9px] uppercase">Premio:</span>
+                    <span id="million-prize" class="mono-font font-extrabold text-yellow-300">100 pts</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="million-timer-bar" class="h-full bg-amber-400 rounded-full transition-[width] duration-1000 ease-linear"
+                style="width:100%"></div>
+        </div>
+        <div class="flex justify-end -mt-1">
+            <span class="text-[10px] text-slate-400 font-bold">Tiempo:
+                <span id="million-timer-val" class="mono-font text-[11px] font-extrabold tabular-nums text-amber-300">30</span>s
+            </span>
+        </div>
+
+        <div id="million-question"
+            class="bg-slate-950/95 border border-slate-800 rounded-xl px-3.5 py-3 text-sm sm:text-base text-slate-100 mono-font leading-snug shadow-inner">
+            Cargando pregunta…
+        </div>
+
+        <div id="million-public"
+            class="hidden bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-2.5 space-y-1.5">
+            <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-1"><i
+                    class="fa-solid fa-people-group mr-1 text-emerald-300"></i>Voto del público</p>
+            <div id="million-public-rows" class="space-y-1.5"></div>
+        </div>
+
+        <div id="million-answers" class="grid grid-cols-1 gap-2">
+            <button id="million-ans-0" onclick="answerMillion(0)"
+                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-0"
+                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">A</span>
+                <span id="million-ans-text-0" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="million-ans-1" onclick="answerMillion(1)"
+                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-1"
+                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">B</span>
+                <span id="million-ans-text-1" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="million-ans-2" onclick="answerMillion(2)"
+                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-2"
+                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">C</span>
+                <span id="million-ans-text-2" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="million-ans-3" onclick="answerMillion(3)"
+                class="hud-interactive text-left flex items-start gap-2 rounded-xl px-3 py-2.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-3"
+                    class="w-6 h-6 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-xs flex items-center justify-center">D</span>
+                <span id="million-ans-text-3" class="text-sm text-slate-100 mono-font leading-snug">—</span>
+            </button>
+        </div>
+
+        <p id="million-explain" class="hidden text-[11px] leading-snug rounded-xl px-3 py-2 mono-font border"></p>
+    </aside>
 
     <!-- FLOATING ORDER TICKET AT BOTTOM-RIGHT -->
     <aside id="mission-ticket-card"
@@ -641,8 +760,52 @@
         </div>
     </div>
 
+    <!-- MILLONARIO GAME OVER MODAL -->
+    <div id="million-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-yellow-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i id="million-gameover-icon" class="fa-solid fa-hourglass-end text-yellow-300 text-4xl mb-3"></i>
+            <h3 id="million-gameover-title" class="text-xl font-extrabold text-white mono-font">¡FIN DEL JUEGO!</h3>
+            <p id="million-gameover-msg" class="text-xs text-slate-400 mt-1 mb-4">Se registró tu puntaje en el Top 10.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="million-gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="million-gameover-best" class="mono-font text-2xl font-extrabold text-yellow-300">0 pts</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Acertadas</p>
+                    <p id="million-gameover-answered" class="mono-font text-lg font-extrabold text-emerald-400">0 / 15</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Premio</p>
+                    <p id="million-gameover-prize" class="mono-font text-lg font-extrabold text-yellow-300">0</p>
+                </div>
+            </div>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartMillionGame()"
+                    class="px-4 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeMillionGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Mi Top
+                </button>
+                <button onclick="closeMillionGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- GAME SCRIPTS -->
-    <script src="src/game.js?v=75"></script>
+    <script src="src/game.js?v=82"></script>
     <script src="src/landing.js?v=65"></script>
 
     <!-- OFFLINE / PWA: registra el service worker para jugar sin conexion -->
