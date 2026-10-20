@@ -4428,7 +4428,7 @@
         //  PLAYGROUND HUB (patio de juegos)
         // ============================================================
         function addHubStation(type, mode, x, z, labelText, color) {
-            const padMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.4, roughness: 0.5 });
+            const padMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.2, roughness: 0.5 });
             const pad = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.2, 0.3, 28), padMat);
             pad.position.set(x, 0.15, z);
             pad.receiveShadow = true;
@@ -4452,9 +4452,9 @@
         function buildChefFireShowcase(station) {
             const g = new THREE.Group();
             g.position.set(station.position.x, 0.3, station.position.z);
-            const coat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6 });
+            const coat = new THREE.MeshStandardMaterial({ color: 0xd5dbe3, roughness: 0.6 });
             const skin = new THREE.MeshStandardMaterial({ color: 0xf3c99a, roughness: 0.75 });
-            const hat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 });
+            const hat = new THREE.MeshStandardMaterial({ color: 0xdde3ea, roughness: 0.85 });
             const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.38, 0.7, 14), coat);
             body.position.y = 0.35; body.castShadow = true; g.add(body);
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 14), skin);
@@ -4531,7 +4531,7 @@
             const g = new THREE.Group();
             g.position.set(station.position.x, 0, station.position.z);
             const frameMat = new THREE.MeshStandardMaterial({ color: 0x7e22ce, roughness: 0.6 });
-            const floor = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 6), new THREE.MeshStandardMaterial({ color: 0xe9d5ff, roughness: 0.7 }));
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(6, 0.2, 6), new THREE.MeshStandardMaterial({ color: 0xd4c3ec, roughness: 0.7 }));
             floor.position.y = 0.1; floor.receiveShadow = true; g.add(floor);
             // Open room: no side walls
             // Vanity + mirror at the back (facing the camera/approach)
@@ -4568,13 +4568,13 @@
             const HZ = HUB_WALK.halfZ;
 
             // Grass ground + stone plaza
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x86c46b, roughness: 0.95 });
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x649a50, roughness: 0.95 });
             const ground = new THREE.Mesh(new THREE.BoxGeometry(HX * 2, 0.4, HZ * 2), groundMat);
             ground.position.y = -0.2;
             ground.receiveShadow = true;
             hubGroup.add(ground);
 
-            const plazaMat = new THREE.MeshStandardMaterial({ color: 0xd9d2c3, roughness: 0.85 });
+            const plazaMat = new THREE.MeshStandardMaterial({ color: 0xc4bdae, roughness: 0.85 });
             const plaza = new THREE.Mesh(new THREE.CylinderGeometry(8.5, 8.5, 0.46, 44), plazaMat);
             plaza.position.y = -0.18;
             plaza.receiveShadow = true;
@@ -4613,7 +4613,7 @@
 
             // Central fountain
             const stoneMat = new THREE.MeshStandardMaterial({ color: 0xb9bec7, roughness: 0.7 });
-            const waterMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.2, emissive: 0x0ea5e9, emissiveIntensity: 0.25, transparent: true, opacity: 0.85 });
+            const waterMat = new THREE.MeshStandardMaterial({ color: 0x2e9cc9, roughness: 0.2, emissive: 0x0a7ea0, emissiveIntensity: 0.08, transparent: true, opacity: 0.85 });
             const fountain = new THREE.Group();
             const fBase = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.4, 0.5, 28), stoneMat);
             fBase.position.y = 0.25; fBase.castShadow = true; fountain.add(fBase);
@@ -4691,8 +4691,8 @@
             // Big animated sea plane surrounding the island
             const seaGeo = new THREE.PlaneGeometry(HX * 8, HZ * 9, 48, 48);
             const seaMat = new THREE.MeshStandardMaterial({
-                color: 0x1d7bb8, roughness: 0.25, metalness: 0.15,
-                emissive: 0x0c4a6e, emissiveIntensity: 0.25,
+                color: 0x186a9e, roughness: 0.25, metalness: 0.15,
+                emissive: 0x093a57, emissiveIntensity: 0.08,
                 transparent: true, opacity: 0.92, side: THREE.DoubleSide
             });
             const sea = new THREE.Mesh(seaGeo, seaMat);
@@ -4713,7 +4713,7 @@
             });
 
             // Foam ring hugging the island shore
-            const foamMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.45, side: THREE.DoubleSide });
+            const foamMat = new THREE.MeshBasicMaterial({ color: 0xcadde9, transparent: true, opacity: 0.45, side: THREE.DoubleSide });
             const foamRings = [];
             const addFoam = (x, z, w, d) => {
                 const f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), foamMat.clone());
@@ -4779,7 +4779,7 @@
                 inner.position.y = 0.25; boat.add(inner);
                 const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 6), dockMatW);
                 mast.position.y = 1.2; boat.add(mast);
-                const sail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.4, 1.2), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8, side: THREE.DoubleSide }));
+                const sail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.4, 1.2), new THREE.MeshStandardMaterial({ color: 0xd5dbe3, roughness: 0.8, side: THREE.DoubleSide }));
                 sail.position.set(0, 1.3, 0.55); boat.add(sail);
                 boat.position.set(b[0], -0.3, b[1]);
                 boat.rotation.y = b[3];
@@ -4800,11 +4800,11 @@
                 const g = new THREE.Group();
                 const body = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 10), new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.5 }));
                 body.scale.set(1, 1.15, 1); body.castShadow = true; g.add(body);
-                const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.1, 8, 18), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 }));
+                const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.1, 8, 18), new THREE.MeshStandardMaterial({ color: 0xd5dbe3, roughness: 0.5 }));
                 stripe.rotation.x = Math.PI / 2; g.add(stripe);
-                const top = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.55, 8), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 }));
+                const top = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.55, 8), new THREE.MeshStandardMaterial({ color: 0xd5dbe3, roughness: 0.5 }));
                 top.position.y = 0.85; g.add(top);
-                const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), new THREE.MeshStandardMaterial({ color: 0xfff3c4, emissive: 0xffca28, emissiveIntensity: 0.9 }));
+                const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), new THREE.MeshStandardMaterial({ color: 0xf0dda0, emissive: 0xd4a418, emissiveIntensity: 0.35 }));
                 lamp.position.y = 1.2; g.add(lamp);
                 g.position.set(p[0], -0.35, p[1]);
                 hubGroup.add(g);
@@ -4816,20 +4816,20 @@
                         b.g.position.y = b.baseY + Math.sin(el * 1.6 + b.phase) * 0.14;
                         b.g.rotation.z = Math.sin(el * 1.2 + b.phase) * 0.1;
                         b.g.rotation.x = Math.cos(el * 1.0 + b.phase) * 0.08;
-                        b.lamp.material.emissiveIntensity = 0.6 + Math.abs(Math.sin(el * 3 + b.phase)) * 0.6;
+                        b.lamp.material.emissiveIntensity = 0.25 + Math.abs(Math.sin(el * 3 + b.phase)) * 0.25;
                     });
                 }
             });
 
             // ---------- Small sand islands with palm trees ----------
-            const sandMat = new THREE.MeshStandardMaterial({ color: 0xf3d9a4, roughness: 0.9 });
+            const sandMat = new THREE.MeshStandardMaterial({ color: 0xd4b884, roughness: 0.9 });
             const palmTrunkMat = new THREE.MeshStandardMaterial({ color: 0x9a6b3f, roughness: 0.85 });
             const palmLeafMat = new THREE.MeshStandardMaterial({ color: 0x2f9e44, roughness: 0.8, side: THREE.DoubleSide });
             const addIsland = (x, z, r, palms) => {
                 const isle = new THREE.Group();
                 const sand = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.8, r, 1.0, 16), sandMat);
                 sand.position.y = -0.35; sand.castShadow = true; sand.receiveShadow = true; isle.add(sand);
-                const grass = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.65, r * 0.75, 0.25, 16), new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.9 }));
+                const grass = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.65, r * 0.75, 0.25, 16), new THREE.MeshStandardMaterial({ color: 0x3fa85c, roughness: 0.9 }));
                 grass.position.y = 0.22; isle.add(grass);
                 for (let pi = 0; pi < palms; pi++) {
                     const palm = new THREE.Group();
@@ -4868,7 +4868,7 @@
             });
 
             // ---------- Seagulls circling above the water ----------
-            const gullMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.6, side: THREE.DoubleSide });
+            const gullMat = new THREE.MeshStandardMaterial({ color: 0xd5dbe3, roughness: 0.6, side: THREE.DoubleSide });
             const gulls = [];
             for (let i = 0; i < 7; i++) {
                 const gl = new THREE.Group();
@@ -4901,9 +4901,9 @@
 
             // ---------- Flowers (swaying in the breeze) ----------
             const stemMat = new THREE.MeshStandardMaterial({ color: 0x3f9142, roughness: 0.9 });
-            const petalColors = [0xff6b6b, 0xffd93d, 0xa29bfe, 0xff9ff3, 0x74b9ff, 0xffffff];
-            const petalMats = petalColors.map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, emissive: c, emissiveIntensity: 0.1 }));
-            const coreMat = new THREE.MeshStandardMaterial({ color: 0xffe066, emissive: 0xffca28, emissiveIntensity: 0.2 });
+            const petalColors = [0xff6b6b, 0xffd93d, 0xa29bfe, 0xff9ff3, 0x74b9ff, 0xdde3ea];
+            const petalMats = petalColors.map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, emissive: c, emissiveIntensity: 0.03 }));
+            const coreMat = new THREE.MeshStandardMaterial({ color: 0xe8c84e, emissive: 0xc9a01a, emissiveIntensity: 0.06 });
             const flowerSpots = [
                 [-13, 9], [-11, 7], [-14, 4], [-12, 12], [-9, 14], [-16, 10],
                 [12, 9], [14, 7], [13, 12], [10, 14], [16, 10], [15, 4],
@@ -4962,7 +4962,7 @@
 
             // ---------- Lamp posts (glowing lanterns) ----------
             const lampPoleMat = new THREE.MeshStandardMaterial({ color: 0x374151, roughness: 0.6, metalness: 0.3 });
-            const lampGlassMat = new THREE.MeshStandardMaterial({ color: 0xffe082, emissive: 0xffb300, emissiveIntensity: 0.9, transparent: true, opacity: 0.92 });
+            const lampGlassMat = new THREE.MeshStandardMaterial({ color: 0xe8c86a, emissive: 0xcc8f00, emissiveIntensity: 0.35, transparent: true, opacity: 0.92 });
             [[-8, -6], [8, -6], [-9.5, 6.5], [9.5, 6.5]].forEach((p, i) => {
                 const g = new THREE.Group();
                 const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 3.2, 8), lampPoleMat);
@@ -4971,12 +4971,12 @@
                 cap.position.y = 3.35; g.add(cap);
                 const glass = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.44, 0.36), lampGlassMat);
                 glass.position.y = 3.0; g.add(glass);
-                const light = new THREE.PointLight(0xffd27f, 0.9, 9, 2);
+                const light = new THREE.PointLight(0xffd27f, 0.45, 9, 2);
                 light.position.set(0, 3.0, 0); g.add(light);
                 g.position.set(p[0], 0, p[1]);
                 hubGroup.add(g);
                 hubDecor.push({ cx: p[0], cz: p[1], r: 0.4 });
-                hubAnimated.push({ update: (el) => { const f = 0.8 + Math.sin(el * 7 + i * 2) * 0.15 + Math.sin(el * 13 + i) * 0.05; glass.material.emissiveIntensity = 0.7 + f * 0.3; light.intensity = 0.7 + f * 0.3; } });
+                hubAnimated.push({ update: (el) => { const f = 0.8 + Math.sin(el * 7 + i * 2) * 0.15 + Math.sin(el * 13 + i) * 0.05; glass.material.emissiveIntensity = 0.25 + f * 0.12; light.intensity = 0.3 + f * 0.12; } });
             });
 
             // ---------- Flags / banners (waving) ----------
@@ -5012,7 +5012,7 @@
             hubAnimated.push({ update: (el) => { balloons.position.y = 3.4 + Math.sin(el * 1.4) * 0.25; balloons.rotation.z = Math.sin(el * 0.9) * 0.08; balloons.rotation.y = Math.sin(el * 0.6) * 0.2; } });
 
             // ---------- Fountain water droplets ----------
-            const dropMat = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, emissive: 0x0ea5e9, emissiveIntensity: 0.4, transparent: true, opacity: 0.85 });
+            const dropMat = new THREE.MeshStandardMaterial({ color: 0x6bbce4, emissive: 0x0a7ea0, emissiveIntensity: 0.12, transparent: true, opacity: 0.85 });
             const drops = [];
             for (let i = 0; i < 34; i++) {
                 const d = new THREE.Mesh(new THREE.SphereGeometry(0.08 + Math.random() * 0.05, 6, 6), dropMat);
@@ -5049,7 +5049,7 @@
             roof.position.y = 4.7; mill.add(roof);
             const blades = new THREE.Group();
             blades.position.set(0, 3.4, 1.05);
-            const bladeMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.7 });
+            const bladeMat = new THREE.MeshStandardMaterial({ color: 0xd5dbe3, roughness: 0.7 });
             for (let k = 0; k < 4; k++) {
                 const blade = new THREE.Mesh(new THREE.BoxGeometry(0.35, 2.4, 0.1), bladeMat);
                 blade.position.y = 1.2;
@@ -5068,7 +5068,7 @@
 
             // ---------- Pond with ripples ----------
             const stoneMat = new THREE.MeshStandardMaterial({ color: 0xb9bec7, roughness: 0.7 });
-            const pondWaterMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.85, emissive: 0x1e40af, emissiveIntensity: 0.15 });
+            const pondWaterMat = new THREE.MeshStandardMaterial({ color: 0x3169c4, roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.85, emissive: 0x16337e, emissiveIntensity: 0.05 });
             const pond = new THREE.Mesh(new THREE.CircleGeometry(3, 34), pondWaterMat);
             pond.rotation.x = -Math.PI / 2; pond.position.set(10, 0.06, 10); hubGroup.add(pond);
             const pondRim = new THREE.Mesh(new THREE.TorusGeometry(3, 0.28, 10, 40), stoneMat);
@@ -5083,8 +5083,8 @@
             hubAnimated.push({ update: (el, dt) => { ripples.forEach(rp => { rp.t += dt * 0.5; if (rp.t > 1) rp.t -= 1; rp.mesh.scale.setScalar(0.4 + rp.t * 2.6); rp.mesh.material.opacity = (1 - rp.t) * 0.5; }); } });
 
             // ---------- Butterflies (fluttering around flowers) ----------
-            const bfWingMat = new THREE.MeshStandardMaterial({ color: 0xffe066, roughness: 0.6, side: THREE.DoubleSide, emissive: 0xff9f1c, emissiveIntensity: 0.15 });
-            const bfWingMat2 = new THREE.MeshStandardMaterial({ color: 0x60a5fa, roughness: 0.6, side: THREE.DoubleSide, emissive: 0x3b82f6, emissiveIntensity: 0.15 });
+            const bfWingMat = new THREE.MeshStandardMaterial({ color: 0xe8c84e, roughness: 0.6, side: THREE.DoubleSide, emissive: 0xcc7f10, emissiveIntensity: 0.04 });
+            const bfWingMat2 = new THREE.MeshStandardMaterial({ color: 0x5288d8, roughness: 0.6, side: THREE.DoubleSide, emissive: 0x2f66bb, emissiveIntensity: 0.04 });
             for (let i = 0; i < 12; i++) {
                 const anchor = flowerSpots[i % flowerSpots.length];
                 const g = new THREE.Group();
@@ -5117,7 +5117,7 @@
             const basket = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 0.7), new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.85 }));
             basket.position.set(0.7, 0.33, 0.4); basket.castShadow = true; picnic.add(basket);
             [[-0.6, 0.2], [-0.2, -0.5], [0.3, -0.6]].forEach(cp => {
-                const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.04, 12), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+                const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.04, 12), new THREE.MeshStandardMaterial({ color: 0xd5dbe3 }));
                 plate.position.set(cp[0], 0.06, cp[1]); picnic.add(plate);
             });
             picnic.position.set(-14, 0.02, -5);
@@ -5134,7 +5134,7 @@
                 pollenPos[i * 3 + 2] = (Math.random() - 0.5) * HZ * 1.9;
             }
             pollenGeo.setAttribute('position', new THREE.BufferAttribute(pollenPos, 3));
-            const pollenMat = new THREE.PointsMaterial({ color: 0xfff6b0, size: 0.28, transparent: true, opacity: 0.75, depthWrite: false });
+            const pollenMat = new THREE.PointsMaterial({ color: 0xe8d98f, size: 0.24, transparent: true, opacity: 0.45, depthWrite: false });
             const pollen = new THREE.Points(pollenGeo, pollenMat);
             hubGroup.add(pollen);
             hubAnimated.push({
@@ -5287,9 +5287,9 @@
             hubNearStation = nearest;
             hubStations.forEach(s => {
                 const active = (s === hubNearStation);
-                if (s.gem) s.gem.material.emissiveIntensity = active ? 1.4 : 0.7;
-                if (s.mesh && s.mesh.material) s.mesh.material.emissiveIntensity = active ? 1.0 : 0.4;
-                if (s.beam && s.beam.material) s.beam.material.opacity = active ? 0.34 : 0.16;
+                if (s.gem) s.gem.material.emissiveIntensity = active ? 0.8 : 0.35;
+                if (s.mesh && s.mesh.material) s.mesh.material.emissiveIntensity = active ? 0.5 : 0.2;
+                if (s.beam && s.beam.material) s.beam.material.opacity = active ? 0.25 : 0.11;
             });
             const prompt = document.getElementById('hub-prompt');
             const promptText = document.getElementById('hub-prompt-text');
@@ -5331,9 +5331,9 @@
 
             // Sky/fog: daytime park in the hub, Duck Hunt sky for aim, dark arena elsewhere
             if (mode === 'hub') {
-                scene.background.set(0x9fd8f2);
-                scene.fog.color.set(0xcfe9f7);
-                scene.fog.density = 0.004;
+                scene.background.set(0x5f9cc4);
+                scene.fog.color.set(0x8fb4c9);
+                scene.fog.density = 0.006;
             } else if (mode === 'aim') {
                 scene.background.set(0x8fd0f0);
                 scene.fog.color.set(0x9fd8f2);
@@ -5355,6 +5355,10 @@
 
             // Keep the sun's shadow frustum over the active arena
             pointSunAt(mode === 'hub' ? 150 : mode === 'millonario' ? -120 : 0);
+
+            // El patio se veia quemado: luz mas suave solo en el hub
+            ambientLight.intensity = mode === 'hub' ? 0.32 : 0.65;
+            dirLight.intensity = mode === 'hub' ? 0.45 : 0.95;
 
             // The chef model travels with the player: hub and kitchen share it
             if (chefMesh) {
