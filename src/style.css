@@ -42,7 +42,7 @@
         }
 
         body.mode-hub #webgl-container canvas {
-            filter: saturate(0.65) brightness(0.52) contrast(1.1);
+            filter: saturate(0.65) brightness(var(--hub-brightness, 0.52)) contrast(1.1);
         }
 
         #labels-container {
@@ -1407,6 +1407,40 @@
             flex: 1;
             accent-color: var(--px-amber, #f5b13d);
             min-width: 0;
+        }
+
+        .admin-stack-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .admin-size-row {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .admin-size-btn {
+            flex: 1;
+            padding: 0.4rem 0;
+            font-size: 0.72rem;
+            font-weight: 700;
+            font-family: inherit;
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            border-radius: 0.3rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .admin-size-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-size-btn.active {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: var(--px-amber, #f5b13d);
+            color: #fcd34d;
         }
 
         .admin-action-btn {

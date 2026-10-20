@@ -4,6 +4,8 @@
     const MUSIC_ENABLED_KEY = 'LogicCooked3D_AdminMusic';
     const SFX_ENABLED_KEY = 'LogicCooked3D_AdminSFX';
     const MUSIC_VOL_KEY = 'LogicCooked3D_AdminMusicVol';
+    const BRIGHTNESS_KEY = 'LogicCooked3D_AdminBrightness';
+    const UISIZE_KEY = 'LogicCooked3D_AdminUISize';
     const THEMES = ['default', 'violeta', 'bosque', 'rosa', 'magma', 'oceano'];
 
     const panel = document.getElementById('admin-panel');
@@ -35,6 +37,23 @@
         });
     }
 
+    // ---- Brillo del patio ----
+    function applyBrightness(v) {
+        document.documentElement.style.setProperty('--hub-brightness', String(v / 100));
+        save(BRIGHTNESS_KEY, String(v));
+    }
+
+    // ---- Tamano de la UI ----
+    const UI_SIZE_PX = { small: 16, medium: 18.5, large: 21.5 };
+    function applyUISize(size) {
+        if (!UI_SIZE_PX[size]) size = 'small';
+        document.documentElement.style.fontSize = UI_SIZE_PX[size] + 'px';
+        save(UISIZE_KEY, size);
+        document.querySelectorAll('.admin-size-btn').forEach((b) => {
+            b.classList.toggle('active', (b.dataset.size || 'small') === size);
+        });
+    }
+
     // ---- Aplicar ajustes guardados al cargar ----
     const savedTheme = load(THEME_KEY, 'default');
     applyTheme(savedTheme);
@@ -42,6 +61,10 @@
     const musicEnabled = load(MUSIC_ENABLED_KEY, '1') === '1';
     const sfxEnabled = load(SFX_ENABLED_KEY, '1') === '1';
     const musicVol = Math.min(30, Math.max(0, parseInt(load(MUSIC_VOL_KEY, '5'), 10) || 5));
+    const brightness = Math.min(100, Math.max(30, parseInt(load(BRIGHTNESS_KEY, '52'), 10) || 52));
+    const uiSize = load(UISIZE_KEY, 'small');
+    applyBrightness(brightness);
+    applyUISize(uiSize);
 
     if (typeof bgMusic !== 'undefined') {
         bgMusic.adminMuted = !musicEnabled;
@@ -54,11 +77,15 @@
     const sfxToggle = document.getElementById('admin-sfx-toggle');
     const volSlider = document.getElementById('admin-music-volume');
     const volLabel = document.getElementById('admin-music-volume-label');
+    const brightnessSlider = document.getElementById('admin-brightness');
+    const brightnessLabel = document.getElementById('admin-brightness-label');
 
     if (musicToggle) musicToggle.checked = musicEnabled;
     if (sfxToggle) sfxToggle.checked = sfxEnabled;
     if (volSlider) volSlider.value = String(musicVol);
     if (volLabel) volLabel.textContent = String(musicVol);
+    if (brightnessSlider) brightnessSlider.value = String(brightness);
+    if (brightnessLabel) brightnessLabel.textContent = String(brightness);
 
     // ---- Abrir / cerrar ----
     function openPanel() {
@@ -118,6 +145,23 @@
             }
         });
     }
+
+    // ---- Brillo del patio ----
+    if (brightnessSlider) {
+        brightnessSlider.addEventListener('input', () => {
+            const v = Math.min(100, Math.max(30, parseInt(brightnessSlider.value, 10) || 52));
+            if (brightnessLabel) brightnessLabel.textContent = String(v);
+            applyBrightness(v);
+        });
+    }
+
+    // ---- Tamano de la UI ----
+    document.querySelectorAll('.admin-size-btn').forEach((b) => {
+        b.addEventListener('click', () => {
+            applyUISize(b.dataset.size || 'small');
+            if (typeof playSFX === 'function') playSFX('pickup');
+        });
+    });
 
     // ---- Borrar Top 10 ----
     const clearScoresBtn = document.getElementById('admin-clear-scores');
