@@ -42,7 +42,7 @@
         }
 
         body.mode-hub #webgl-container canvas {
-            filter: saturate(0.68);
+            filter: saturate(0.68) brightness(0.82);
         }
 
         #labels-container {
