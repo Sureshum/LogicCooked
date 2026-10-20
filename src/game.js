@@ -51,10 +51,36 @@
                 } else if (type === 'error') {
                     osc.type = 'square';
                     osc.frequency.setValueAtTime(165, now);
-                    osc.frequency.setValueAtTime(115, now + 0.12);
+                    osc.frequency.exponentialRampToValueAtTime(115, now + 0.12);
                     gain.gain.setValueAtTime(0.15, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
                     osc.start(now); osc.stop(now + 0.28);
+                } else if (type === 'shot') {
+                    // Banguido del revólver (Duelo)
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.exponentialRampToValueAtTime(48, now + 0.26);
+                    gain.gain.setValueAtTime(0.28, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+                    osc.start(now); osc.stop(now + 0.34);
+                    const noise = audioCtx.createBufferSource();
+                    const nbuf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.28, audioCtx.sampleRate);
+                    const ch = nbuf.getChannelData(0);
+                    for (let i = 0; i < ch.length; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / ch.length);
+                    noise.buffer = nbuf;
+                    const ng = audioCtx.createGain();
+                    ng.gain.setValueAtTime(0.22, now);
+                    ng.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                    noise.connect(ng); ng.connect(audioCtx.destination);
+                    noise.start(now); noise.stop(now + 0.3);
+                } else if (type === 'click') {
+                    // Clic seco del cilindro: recámara vacía
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1400, now);
+                    osc.frequency.exponentialRampToValueAtTime(700, now + 0.03);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+                    osc.start(now); osc.stop(now + 0.07);
                 }
             } catch (e) { }
         }
@@ -76,7 +102,7 @@
             sfxEnabled = !!enabled;
         }
 
-        const modeScores = { overcooked: 0, aim: 0, connect: 0, millonario: 0 };
+        const modeScores = { overcooked: 0, aim: 0, connect: 0, millonario: 0, duelo: 0 };
         let globalStreak = 0;
         let statHits = 0;
         let statMisses = 0;
@@ -110,7 +136,7 @@
             }
             return picks.sort((a, b) => b.score - a.score);
         }
-        const MODE_LABELS = { overcooked: 'Cocina 3D', aim: 'Rayo Lógico', connect: 'Cables Lógicos', millonario: 'Millonario Lógico' };
+        const MODE_LABELS = { overcooked: 'Cocina 3D', aim: 'Rayo Lógico', connect: 'Cables Lógicos', millonario: 'Millonario Lógico', duelo: 'Duelo Revólver' };
         const KITCHEN_TIMES = [60, 120, 180];
         const DIFFICULTY_LABELS = { easy: 'Fácil', normal: 'Normal', hard: 'Difícil' };
         const DIFFICULTY_CLASSES = {
@@ -1325,6 +1351,7 @@
 
         function currentRoundLimit() {
             if (currentMode === 'millonario') return MILL_TIMES[millDifficulty];
+            if (currentMode === 'duelo') return DUEL_TIMES[duelDifficulty];
             return currentMode === 'overcooked' ? kitchenRoundTime : 45;
         }
 
@@ -1356,6 +1383,18 @@
                 if (mVal) {
                     mVal.textContent = secs;
                     mVal.className = 'mono-font text-[11px] font-extrabold tabular-nums ' + (low ? 'text-rose-400' : 'text-amber-300');
+                }
+            }
+            if (currentMode === 'duelo') {
+                const dBar = document.getElementById('duel-timer-bar');
+                const dVal = document.getElementById('duel-timer-val');
+                if (dBar) {
+                    dBar.style.width = pct + '%';
+                    dBar.className = 'h-full rounded-full transition-[width] duration-1000 ease-linear ' + (low ? 'bg-rose-500' : 'bg-orange-400');
+                }
+                if (dVal) {
+                    dVal.textContent = secs;
+                    dVal.className = 'mono-font text-[11px] font-extrabold tabular-nums ' + (low ? 'text-rose-400' : 'text-orange-300');
                 }
             }
         }
@@ -1881,8 +1920,8 @@
         }
 
         function triggerGangnamStyle() {
-            if (currentMode === 'millonario') {
-                if (millGameOver || awaitingStart) return;
+            if (currentMode === 'millonario' || currentMode === 'duelo') {
+                if (millGameOver || duelGameOver || awaitingStart) return;
                 gangnamTimer = 4.5;
                 playSFX('success');
                 return;
@@ -4414,6 +4453,802 @@
             scene.add(cool);
         }
 
+        // ============================================================
+        //  DUELO REVÓLVER (modo duelo) — 2 jugadores con ruleta rusa
+        // ============================================================
+        const duelGroup = new THREE.Group();
+        duelGroup.position.set(-180, 0, 0);
+        scene.add(duelGroup);
+        const duelAnimated = [];
+        let duelRivalFigure = null;
+
+        const DUEL_TIMES = { easy: 35, normal: 28, hard: 20 };
+        const DUEL_CHAMBERS = 6;
+        const DUEL_LETTERS = ['A', 'B', 'C', 'D'];
+        const DUEL_POWER_KEYS = ['rival', 'self', 'reroll'];
+        const DUEL_ANSWER_BASE = 'hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-orange-500/40 hover:border-orange-300 hover:bg-orange-500/10';
+        const DUEL_EXPLAIN_BASE = 'text-[11px] leading-snug rounded-xl px-3 py-2 mono-font border ';
+
+        let duelDifficulty = 'normal';
+        let duelLivesMax = 3;
+        let duelLives = [3, 3];
+        let duelTurn = 0;
+        let duelQuestion = null;
+        let duelLocked = false;
+        let duelGameOver = false;
+        let duelPhase = 'question';
+        let duelChambers = DUEL_CHAMBERS;
+        let duelSeq = 0;
+        let duelHits = 0;
+        let duelShots = 0;
+        let duelPowerUser = 0;
+
+        // Primera persona: cada jugador ve al otro desde sus propios ojos
+        // fwd = cuánto avanzar el ojo para quedar fuera de la nariz/cara del modelo
+        const DUEL_EYES = [
+            { eye: new THREE.Vector3(2.6, 1.86, -0.45), look: new THREE.Vector3(6.6, 1.80, -0.6), fwd: 0.5 },
+            { eye: new THREE.Vector3(6.6, 1.80, -0.6), look: new THREE.Vector3(2.6, 1.86, -0.45), fwd: 0.4 }
+        ];
+        const DUEL_CHEF_EYES = {
+            chef: { y: 1.86, fwd: 0.5 },
+            oso: { y: 2.36, fwd: 0.86 },
+            lobo: { y: 2.32, fwd: 0.88 },
+            gato: { y: 2.30, fwd: 0.78 },
+            '67': { y: 1.78, fwd: 0.38 },
+            tung: { y: 2.06, fwd: 0.72 }
+        };
+
+        function updateDuelCamera(elapsed) {
+            if (!duelGroup) return;
+            if (duelGameOver) {
+                camTargetPos.set(duelGroup.position.x + 1.5, 3.4, 9.2);
+                camLookAtPos.set(duelGroup.position.x + 4.5, 1.2, -0.3);
+                return;
+            }
+            const p = DUEL_EYES[duelTurn === 1 ? 1 : 0];
+            let eyeY = p.eye.y;
+            let fwd = p.fwd;
+            if (duelTurn === 0) {
+                const c = DUEL_CHEF_EYES[chefActiveSpecial] || DUEL_CHEF_EYES.chef;
+                eyeY = c.y;
+                fwd = c.fwd;
+            }
+            const dx = p.look.x - p.eye.x;
+            const dz = p.look.z - p.eye.z;
+            const len = Math.hypot(dx, dz) || 1;
+            const swayX = Math.sin(elapsed * 0.9) * 0.02;
+            const swayY = Math.cos(elapsed * 1.3) * 0.015;
+            camTargetPos.set(
+                duelGroup.position.x + p.eye.x + (dx / len) * fwd + swayX,
+                eyeY + swayY,
+                p.eye.z + (dz / len) * fwd
+            );
+            camLookAtPos.set(duelGroup.position.x + p.look.x, p.look.y + swayY * 0.5, p.look.z);
+        }
+
+        function duelTime() { return DUEL_TIMES[duelDifficulty] || DUEL_TIMES.normal; }
+        function duelChance() { return 100 / duelChambers; }
+        function duelSetText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
+
+        function duelP2Name() {
+            const el = document.getElementById('duel-p2-name');
+            const v = el && el.value ? String(el.value).trim() : '';
+            return v || 'Invitado';
+        }
+
+        function duelName(i) { return i === 0 ? getPlayerName() : duelP2Name(); }
+
+        function duelGenerateQuestion() {
+            const prev = millDifficulty;
+            millDifficulty = duelDifficulty;
+            let q = null;
+            try { q = generateMillionQuestion(); } catch (e) { q = null; }
+            millDifficulty = prev;
+            if (!q || !q.options || q.options.length !== 4) {
+                q = {
+                    category: 'LÓGICA PROPOSICIONAL',
+                    text: '¿Cuál de estas proposiciones es una tautología?',
+                    options: ['p ∨ ¬p', 'p ∧ ¬p', 'p → ¬p', 'p ∧ p'],
+                    correctIdx: 0,
+                    explain: 'p ∨ ¬p es siempre verdadera: es el principio del tercero excluido.'
+                };
+            }
+            return q;
+        }
+
+        function renderDuelCylinder() {
+            const wrap = document.getElementById('duel-cylinder');
+            if (wrap) {
+                let html = '';
+                for (let i = 1; i <= DUEL_CHAMBERS; i++) {
+                    html += '<span class="duel-chamber' + (i <= duelChambers ? ' live' : '') + (i === duelChambers ? ' next' : '') + '"></span>';
+                }
+                wrap.innerHTML = html;
+            }
+            duelSetText('duel-chance', duelChance().toFixed(0) + '%');
+            duelSetText('duel-cylinder-hud', duelChambers + ' / ' + DUEL_CHAMBERS);
+        }
+
+        function renderDuelLives() {
+            for (let i = 0; i < 2; i++) {
+                const el = document.getElementById('duel-p' + (i + 1) + '-lives');
+                if (!el) continue;
+                let html = '';
+                for (let k = 0; k < duelLivesMax; k++) {
+                    html += k < duelLives[i]
+                        ? '<i class="fa-solid fa-heart"></i>'
+                        : '<i class="fa-regular fa-heart text-slate-600"></i>';
+                }
+                el.innerHTML = html;
+            }
+            duelSetText('duel-p1-tag', 'J1 · ' + duelName(0));
+            duelSetText('duel-p2-tag', 'J2 · ' + duelName(1));
+        }
+
+        function renderDuelTurn() { duelSetText('duel-turn', 'TURNO: ' + duelName(duelTurn)); }
+
+        function renderDuelHud() {
+            renderDuelLives();
+            renderDuelTurn();
+            renderDuelCylinder();
+            duelSetText('duel-score', modeScores.duelo || 0);
+            const hs = document.getElementById('hud-score');
+            if (hs) hs.textContent = modeScores.duelo || 0;
+        }
+
+        function duelAddScore(pts) {
+            modeScores.duelo = Math.max(0, (modeScores.duelo || 0) + pts);
+            duelSetText('duel-score', modeScores.duelo);
+            const hs = document.getElementById('hud-score');
+            if (hs) hs.textContent = modeScores.duelo;
+        }
+
+        function duelShowPower(title) {
+            duelPhase = 'power';
+            duelSetText('duel-power-title', title);
+            const p = document.getElementById('duel-power');
+            if (p) p.classList.remove('hidden');
+        }
+
+        function duelHidePower() {
+            const p = document.getElementById('duel-power');
+            if (p) p.classList.add('hidden');
+        }
+
+        function duelShowExplain(text, ok) {
+            const el = document.getElementById('duel-explain');
+            if (!el) return;
+            el.textContent = text;
+            el.className = DUEL_EXPLAIN_BASE + (ok
+                ? 'text-emerald-200 bg-emerald-950/85 border-emerald-500/40'
+                : 'text-rose-200 bg-rose-950/85 border-rose-500/40');
+        }
+
+        function duelSetAnswersEnabled(enabled) {
+            for (let i = 0; i < 4; i++) {
+                const b = document.getElementById('duel-ans-' + i);
+                if (b) b.disabled = !enabled;
+            }
+        }
+
+        function duelFlash(kind) {
+            const el = document.getElementById('duel-flash');
+            if (!el) return;
+            el.classList.remove('duel-flash-bang', 'duel-flash-dry');
+            void el.offsetWidth;
+            el.classList.add(kind === 'bang' ? 'duel-flash-bang' : 'duel-flash-dry');
+        }
+
+        function refreshDuelReady() {
+            const answers = document.getElementById('duel-answers');
+            if (answers) {
+                answers.classList.toggle('opacity-50', awaitingStart);
+                answers.classList.toggle('pointer-events-none', awaitingStart);
+            }
+            duelSetAnswersEnabled(!awaitingStart);
+        }
+
+        function renderDuelQuestion() {
+            const q = duelQuestion;
+            if (!q) return;
+            duelSetText('duel-category', q.category);
+            duelSetText('duel-question', q.text);
+            for (let i = 0; i < 4; i++) {
+                const t = document.getElementById('duel-ans-text-' + i);
+                if (t) t.textContent = q.options[i];
+                const b = document.getElementById('duel-ans-' + i);
+                if (b) { b.className = DUEL_ANSWER_BASE; b.disabled = false; }
+                const badge = document.getElementById('duel-ans-letter-' + i);
+                if (badge) badge.className = 'w-8 h-8 shrink-0 rounded-md bg-orange-400 text-slate-950 font-extrabold text-sm flex items-center justify-center';
+            }
+            duelHidePower();
+            const exp = document.getElementById('duel-explain');
+            if (exp) { exp.textContent = ''; exp.className = DUEL_EXPLAIN_BASE + 'hidden'; }
+            duelPhase = 'question';
+            renderDuelHud();
+        }
+
+        function startDuelRun() {
+            duelSeq++;
+            duelGameOver = false;
+            duelLocked = false;
+            duelPhase = 'question';
+            duelTurn = 0;
+            duelLives = [duelLivesMax, duelLivesMax];
+            duelChambers = DUEL_CHAMBERS;
+            duelHits = 0;
+            duelShots = 0;
+            duelPowerUser = 0;
+            duelQuestion = null;
+            modeScores.duelo = 0;
+            globalStreak = 0;
+            statHits = 0;
+            statMisses = 0;
+            const hs = document.getElementById('hud-score');
+            if (hs) hs.textContent = '0';
+            const hst = document.getElementById('hud-streak');
+            if (hst) hst.textContent = 'x1';
+            const ha = document.getElementById('hud-accuracy-stats');
+            if (ha) ha.textContent = '✔ 0 | ✖ 0';
+            roundTimer = duelTime();
+            const ht = document.getElementById('hud-timer');
+            if (ht) ht.textContent = roundTimer + 's';
+            hideDuelGameOver();
+            updateDuelDifficultyButtons();
+            updateDuelLivesButtons();
+            duelQuestion = duelGenerateQuestion();
+            renderDuelQuestion();
+            renderDuelHud();
+            updateBigTimer();
+            armStartHint();
+            refreshDuelReady();
+        }
+
+        function nextDuelQuestion() {
+            duelSeq++;
+            duelQuestion = duelGenerateQuestion();
+            duelLocked = false;
+            duelPhase = 'question';
+            roundTimer = duelTime();
+            const ht = document.getElementById('hud-timer');
+            if (ht) ht.textContent = roundTimer + 's';
+            renderDuelQuestion();
+            updateBigTimer();
+            refreshDuelReady();
+        }
+
+        function answerDuel(idx) {
+            if (awaitingStart && !landingVisible()) {
+                awaitingStart = false;
+                hideStartHint();
+                playSFX('pickup');
+                updateBigTimer();
+                refreshDuelReady();
+                return;
+            }
+            if (duelGameOver || duelLocked || duelPhase !== 'question' || !duelQuestion) return;
+            if (idx < 0 || idx > 3) return;
+
+            duelLocked = true;
+            const seq = ++duelSeq;
+            const q = duelQuestion;
+            const isCorrect = idx === q.correctIdx;
+
+            const paint = (i, cls) => {
+                const b = document.getElementById('duel-ans-' + i);
+                if (b) b.className = DUEL_ANSWER_BASE + ' ' + cls;
+            };
+            paint(q.correctIdx, 'border-emerald-400 bg-emerald-500/25');
+            if (!isCorrect) paint(idx, 'border-rose-400 bg-rose-500/25');
+            duelSetAnswersEnabled(false);
+
+            const who = duelName(duelTurn);
+            const hst = document.getElementById('hud-streak');
+            const ha = document.getElementById('hud-accuracy-stats');
+
+            if (isCorrect) {
+                duelHits++;
+                statHits++;
+                globalStreak++;
+                const mult = streakMultiplier(globalStreak);
+                const pts = Math.round(100 * mult);
+                duelAddScore(pts);
+                playSFX('success');
+                showHitPopup('+' + pts, true, mult > 1 ? `x${mult} COMBO` : '¡CORRECTA!', 2000);
+                duelShowExplain(q.explain, true);
+                if (hst) hst.textContent = `x${mult}`;
+                if (ha) ha.textContent = `✔ ${statHits} | ✖ ${statMisses}`;
+                duelPowerUser = duelTurn;
+                renderDuelHud();
+                setTimeout(() => {
+                    if (seq === duelSeq && !duelGameOver && currentMode === 'duelo') {
+                        duelShowPower(`¡${who} ganó la pregunta! Elige su jugada (teclas 1-3)`);
+                    }
+                }, 2400);
+            } else {
+                statMisses++;
+                globalStreak = 0;
+                playSFX('error');
+                showHitPopup('¡FALLASTE!', false, who.toUpperCase() + ' SE DISPARA', 2600);
+                duelShowExplain(`${q.explain} → La buena era la ${DUEL_LETTERS[q.correctIdx]}. ${who} pierde y se dispara a sí mismo.`, false);
+                if (hst) hst.textContent = 'x1';
+                if (ha) ha.textContent = `✔ ${statHits} | ✖ ${statMisses}`;
+                renderDuelHud();
+                setTimeout(() => {
+                    if (seq === duelSeq && !duelGameOver && currentMode === 'duelo') resolveDuelShot(duelTurn, 'fallaste la pregunta', false);
+                }, 2800);
+            }
+        }
+
+        function handleDuelTimeout() {
+            if (duelGameOver || duelLocked || duelPhase !== 'question' || !duelQuestion) return;
+            duelLocked = true;
+            const seq = ++duelSeq;
+            const q = duelQuestion;
+            const paint = (i, cls) => {
+                const b = document.getElementById('duel-ans-' + i);
+                if (b) b.className = DUEL_ANSWER_BASE + ' ' + cls;
+            };
+            paint(q.correctIdx, 'border-emerald-400 bg-emerald-500/25');
+            duelSetAnswersEnabled(false);
+            statMisses++;
+            globalStreak = 0;
+            playSFX('error');
+            const who = duelName(duelTurn);
+            showHitPopup('¡TIEMPO!', false, who.toUpperCase() + ' SE DISPARA', 2600);
+            duelShowExplain(`Se acabó el tiempo. ${who} pierde el turno y se dispara. La buena era la ${DUEL_LETTERS[q.correctIdx]}.`, false);
+            const hst = document.getElementById('hud-streak');
+            const ha = document.getElementById('hud-accuracy-stats');
+            if (hst) hst.textContent = 'x1';
+            if (ha) ha.textContent = `✔ ${statHits} | ✖ ${statMisses}`;
+            renderDuelHud();
+            setTimeout(() => {
+                if (seq === duelSeq && !duelGameOver && currentMode === 'duelo') resolveDuelShot(duelTurn, 'se le acabó el tiempo', false);
+            }, 2800);
+        }
+
+        function resolveDuelShot(targetIdx, reason, selfGlory, attackerIdx) {
+            if (duelGameOver) return;
+            duelShots++;
+            const seq = ++duelSeq;
+            duelPhase = 'shot';
+            duelHidePower();
+            duelSetAnswersEnabled(false);
+
+            const chance = 1 / duelChambers;
+            const bang = Math.random() < chance;
+            const who = duelName(targetIdx);
+            const attacker = typeof attackerIdx === 'number' ? attackerIdx : -1;
+
+            if (bang) {
+                playSFX('shot');
+                duelFlash('bang');
+                duelLives[targetIdx] = Math.max(0, duelLives[targetIdx] - 1);
+                duelChambers = DUEL_CHAMBERS;
+                const killBonus = (attacker >= 0 && attacker !== targetIdx) ? 150 : 0;
+                if (killBonus) duelAddScore(killBonus);
+                showHitPopup('¡BANG!', false, who.toUpperCase() + ' PIERDE 1 VIDA' + (killBonus ? ` +${killBonus} PTS` : ''), 2400);
+                duelShowExplain(`¡BANG! ${who} se dio (${reason}) y pierde 1 vida: le quedan ${duelLives[targetIdx]}.${killBonus ? ` ${duelName(attacker)} suma +${killBonus} pts.` : ''} Se cambia el cartucho completo, cilindro a ${DUEL_CHAMBERS}.`, false);
+                renderDuelHud();
+                if (duelLives[targetIdx] <= 0) {
+                    setTimeout(() => { if (seq === duelSeq && !duelGameOver) endDuelGame(1 - targetIdx); }, 2600);
+                    return;
+                }
+            } else {
+                playSFX('click');
+                duelFlash('dry');
+                duelChambers = Math.max(1, duelChambers - 1);
+                if (selfGlory) {
+                    duelAddScore(100);
+                    showHitPopup('+100', true, 'VALENTÍA: SOBREVIVISTE', 2200);
+                } else {
+                    showHitPopup('click…', true, 'CILINDRO: ' + duelChambers + '/' + DUEL_CHAMBERS, 2200);
+                }
+                duelShowExplain(`Click: recámara vacía para ${who} (${reason}; probabilidad ${Math.round(chance * 100)}%). Quedan ${duelChambers} recámaras.${selfGlory ? ' Valentía +100 pts.' : ''}`, true);
+                renderDuelHud();
+            }
+            setTimeout(() => {
+                if (seq === duelSeq && !duelGameOver && currentMode === 'duelo') nextDuelTurn();
+            }, 2600);
+        }
+
+        function nextDuelTurn() {
+            duelTurn = 1 - duelTurn;
+            nextDuelQuestion();
+        }
+
+        function duelShoot(kind) {
+            if (duelGameOver || duelPhase !== 'power' || awaitingStart) return;
+            const shooter = duelPowerUser;
+            if (kind === 'reroll') {
+                duelChambers = DUEL_CHAMBERS;
+                duelHidePower();
+                duelPhase = 'shot';
+                playSFX('pickup');
+                showHitPopup('RECARGA', true, 'CILINDRO A ' + DUEL_CHAMBERS + '/' + DUEL_CHAMBERS, 1900);
+                duelShowExplain(`${duelName(shooter)} re-rollea todo el cartucho: cilindro nuevo con ${DUEL_CHAMBERS} recámaras, la probabilidad vuelve al ${Math.round(duelChance())}%.`, true);
+                renderDuelHud();
+                const seq = duelSeq;
+                setTimeout(() => {
+                    if (seq === duelSeq && !duelGameOver && currentMode === 'duelo') nextDuelTurn();
+                }, 2200);
+                return;
+            }
+            duelPhase = 'shot';
+            duelHidePower();
+            if (kind === 'self') resolveDuelShot(shooter, 'se dispara a sí mismo por valentía', true, shooter);
+            else resolveDuelShot(1 - shooter, 'disparo de ' + duelName(shooter), false, shooter);
+        }
+
+        function endDuelGame(winnerIdx) {
+            if (duelGameOver) return;
+            duelGameOver = true;
+            duelLocked = true;
+            duelPhase = 'shot';
+            duelSeq++;
+            duelHidePower();
+            duelSetAnswersEnabled(false);
+
+            const winName = duelName(winnerIdx);
+            duelAddScore(500);
+            playSFX('success');
+            showHitPopup('¡' + winName.toUpperCase() + ' GANA!', true, '+500 PTS BONUS', 2800);
+
+            const hst = document.getElementById('hud-streak');
+            const ha = document.getElementById('hud-accuracy-stats');
+            if (hst) hst.textContent = 'x1';
+            if (ha) ha.textContent = `✔ ${statHits} | ✖ ${statMisses}`;
+            roundTimer = 0;
+            const ht = document.getElementById('hud-timer');
+            if (ht) ht.textContent = '0s';
+            updateBigTimer();
+
+            renderDuelHud();
+
+            const overlay = document.getElementById('duel-gameover');
+            if (overlay) {
+                duelSetText('duel-gameover-title', '¡GANÓ ' + winName.toUpperCase() + '!');
+                const icon = document.getElementById('duel-gameover-icon');
+                if (icon) icon.className = 'fa-solid fa-trophy text-orange-300 text-4xl mb-3 animate-bounce';
+                duelSetText('duel-gameover-msg', `El duelo es solo 1 vs 1: no cuenta para ningún Top 10.`);
+                duelSetText('duel-gameover-score', (modeScores.duelo || 0) + ' pts');
+                duelSetText('duel-gameover-hits', String(duelHits));
+                duelSetText('duel-gameover-shots', String(duelShots));
+                duelSetText('duel-gameover-lives', duelLives[winnerIdx] + ' / ' + duelLivesMax);
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            }
+        }
+
+        function hideDuelGameOver() {
+            const overlay = document.getElementById('duel-gameover');
+            if (!overlay) return;
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
+
+        function closeDuelGameOver() {
+            hideDuelGameOver();
+            if (currentMode === 'duelo') startDuelRun();
+        }
+
+        function restartDuelGame() {
+            playSFX('pickup');
+            startDuelRun();
+        }
+
+        function updateDuelDifficultyButtons() {
+            const defs = [
+                { id: 'btn-duel-easy', active: 'bg-emerald-500 text-slate-950', key: 'easy' },
+                { id: 'btn-duel-normal', active: 'bg-amber-400 text-slate-950', key: 'normal' },
+                { id: 'btn-duel-hard', active: 'bg-rose-500 text-white', key: 'hard' }
+            ];
+            defs.forEach(d => {
+                const el = document.getElementById(d.id);
+                if (!el) return;
+                el.className = d.key === duelDifficulty
+                    ? `px-2.5 py-0.5 rounded-md text-[10px] font-bold transition ${d.active}`
+                    : 'px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800';
+            });
+        }
+
+        function setDuelDifficulty(diff) {
+            duelDifficulty = diff;
+            updateDuelDifficultyButtons();
+            if (currentMode !== 'duelo') return;
+            playSFX('pickup');
+            startDuelRun();
+        }
+
+        function updateDuelLivesButtons() {
+            const defs = [
+                { id: 'btn-duel-lives-3', active: 'bg-rose-500 text-white', key: 3 },
+                { id: 'btn-duel-lives-2', active: 'bg-rose-500 text-white', key: 2 },
+                { id: 'btn-duel-lives-1', active: 'bg-rose-500 text-white', key: 1 }
+            ];
+            defs.forEach(d => {
+                const el = document.getElementById(d.id);
+                if (!el) return;
+                el.className = d.key === duelLivesMax
+                    ? `px-2.5 py-0.5 rounded-md text-[10px] font-bold transition ${d.active}`
+                    : 'px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800';
+            });
+        }
+
+        function setDuelLives(n) {
+            duelLivesMax = n;
+            updateDuelLivesButtons();
+            if (currentMode !== 'duelo') return;
+            playSFX('pickup');
+            startDuelRun();
+        }
+
+        (function initDuelP2Name() {
+            const el = document.getElementById('duel-p2-name');
+            if (!el) return;
+            try {
+                const saved = localStorage.getItem('LogicCooked3D_DuelP2Name');
+                if (saved) el.value = saved;
+            } catch (e) { }
+            el.addEventListener('change', () => {
+                el.value = (el.value || '').trim().slice(0, 12);
+                try { localStorage.setItem('LogicCooked3D_DuelP2Name', el.value); } catch (e) { }
+                if (currentMode === 'duelo') renderDuelHud();
+            });
+        })();
+
+        // ---------------- Revólver reutilizable (escenario y vitrina) ----------------
+        function createRevolverModel(metal, grip) {
+            const g = new THREE.Group();
+            const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.3, 14), metal);
+            drum.rotation.z = Math.PI / 2;
+            drum.castShadow = true;
+            g.add(drum);
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.72, 12), metal);
+            barrel.rotation.z = Math.PI / 2;
+            barrel.position.set(0.5, 0.04, 0);
+            barrel.castShadow = true;
+            g.add(barrel);
+            const sight = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.05), metal);
+            sight.position.set(0.82, 0.12, 0);
+            g.add(sight);
+            const frame = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.17, 0.15), metal);
+            frame.position.set(-0.2, -0.02, 0);
+            frame.castShadow = true;
+            g.add(frame);
+            const handle = new THREE.Mesh(new THREE.BoxGeometry(0.17, 0.42, 0.13), grip);
+            handle.position.set(-0.37, -0.2, 0);
+            handle.rotation.z = 0.5;
+            handle.castShadow = true;
+            g.add(handle);
+            const trigger = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.02, 6, 12), metal);
+            trigger.position.set(-0.13, -0.17, 0);
+            g.add(trigger);
+            const holeMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.6 });
+            for (let i = 0; i < 6; i++) {
+                const a = (i / 6) * Math.PI * 2;
+                const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.34, 8), holeMat);
+                hole.rotation.z = Math.PI / 2;
+                hole.position.set(0, Math.cos(a) * 0.12, Math.sin(a) * 0.12);
+                g.add(hole);
+            }
+            return g;
+        }
+
+        // ---------------- Figura del rival (vaquero) ----------------
+        function createDuelRivalFigure() {
+            const group = new THREE.Group();
+            const body = new THREE.Group();
+            group.add(body);
+
+            const coatMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.7 });
+            const vestMat = new THREE.MeshStandardMaterial({ color: 0x7c2d12, roughness: 0.75 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xe0b289, roughness: 0.7 });
+            const hatMat = new THREE.MeshStandardMaterial({ color: 0x29211c, roughness: 0.85 });
+            const bandanaMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.7 });
+
+            const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.47, 0.85, 14), coatMat);
+            torso.position.y = 1.2; torso.castShadow = true; body.add(torso);
+            const vest = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 0.5, 14), vestMat);
+            vest.position.y = 1.15; vest.castShadow = true; body.add(vest);
+
+            const headG = new THREE.Group();
+            headG.position.y = 1.78;
+            body.add(headG);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 14), skinMat);
+            head.castShadow = true; headG.add(head);
+            const bandana = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.07, 8, 16), bandanaMat);
+            bandana.rotation.x = Math.PI / 2;
+            bandana.position.y = -0.13;
+            headG.add(bandana);
+            const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.52, 0.06, 20), hatMat);
+            brim.position.y = 0.2; brim.castShadow = true; headG.add(brim);
+            const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.34, 16), hatMat);
+            crown.position.y = 0.38; crown.castShadow = true; headG.add(crown);
+
+            const armL = createNpcArm(-1, 0x1e3a8a, 0xe0b289);
+            armL.position.set(-0.52, 1.5, 0); body.add(armL);
+            const armR = createNpcArm(1, 0x1e3a8a, 0xe0b289);
+            armR.position.set(0.52, 1.5, 0); body.add(armR);
+            const legL = createNpcLeg(-1, 0x29211c, 0x111827);
+            body.add(legL);
+            const legR = createNpcLeg(1, 0x29211c, 0x111827);
+            body.add(legR);
+
+            return { group, body, head: headG, armL, armR, legL, legR };
+        }
+
+        // ---------------- Saloon 3D del duelo ----------------
+        function build3DDuelArena() {
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x4a3021, roughness: 0.9, metalness: 0.05 });
+            const floor = new THREE.Mesh(new THREE.BoxGeometry(44, 0.5, 44), floorMat);
+            floor.position.y = -0.27;
+            floor.receiveShadow = true;
+            duelGroup.add(floor);
+
+            const plankMat = new THREE.MeshStandardMaterial({ color: 0x33200f, roughness: 0.95 });
+            for (let i = -10; i <= 10; i++) {
+                const gap = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 44), plankMat);
+                gap.position.set(i * 2, -0.01, 0);
+                duelGroup.add(gap);
+            }
+
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x2b1a10, roughness: 0.9 });
+            const wall = new THREE.Mesh(new THREE.BoxGeometry(36, 11, 0.6), wallMat);
+            wall.position.set(0, 5.5, -10);
+            wall.receiveShadow = true;
+            duelGroup.add(wall);
+
+            const beamMat = new THREE.MeshStandardMaterial({ color: 0x54331b, roughness: 0.85 });
+            [-16, -8, 0, 8, 16].forEach(x => {
+                const beam = new THREE.Mesh(new THREE.BoxGeometry(0.5, 11, 0.75), beamMat);
+                beam.position.set(x, 5.5, -9.6);
+                duelGroup.add(beam);
+            });
+
+            // Paredes laterales, frontal y techo: el salón cerrado, sin ver los demás juegos
+            [-14, 14].forEach(wx => {
+                const side = new THREE.Mesh(new THREE.BoxGeometry(0.6, 11, 24.6), wallMat);
+                side.position.set(wx, 5.5, 2);
+                side.receiveShadow = true;
+                duelGroup.add(side);
+            });
+            const frontWall = new THREE.Mesh(new THREE.BoxGeometry(28.6, 11, 0.6), wallMat);
+            frontWall.position.set(0, 5.5, 14);
+            frontWall.receiveShadow = true;
+            duelGroup.add(frontWall);
+            const ceiling = new THREE.Mesh(new THREE.BoxGeometry(28.6, 0.5, 24.6),
+                new THREE.MeshStandardMaterial({ color: 0x1a0f08, roughness: 0.95 }));
+            ceiling.position.set(0, 11.2, 2);
+            duelGroup.add(ceiling);
+            [-6, -2, 2, 6, 10].forEach(z => {
+                [-13.6, 13.6].forEach(x => {
+                    const b = new THREE.Mesh(new THREE.BoxGeometry(0.75, 11, 0.5), beamMat);
+                    b.position.set(x, 5.5, z);
+                    duelGroup.add(b);
+                });
+            });
+            [-10, -5, 0, 5, 10].forEach(x => {
+                const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 11, 0.75), beamMat);
+                b.position.set(x, 5.5, 13.6);
+                duelGroup.add(b);
+            });
+
+            const signMat = new THREE.MeshStandardMaterial({ color: 0x160b05, roughness: 0.7 });
+            const sign = new THREE.Mesh(new THREE.BoxGeometry(13, 2.6, 0.4), signMat);
+            sign.position.set(0, 7.4, -9.2);
+            duelGroup.add(sign);
+
+            const neonMat = new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0xf97316, emissiveIntensity: 1.1, roughness: 0.4 });
+            const mkBar = (w, h, x, y) => {
+                const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.2), neonMat);
+                m.position.set(x, y, -8.95);
+                duelGroup.add(m);
+            };
+            mkBar(13.4, 0.18, 0, 8.75);
+            mkBar(13.4, 0.18, 0, 6.05);
+            mkBar(0.18, 2.9, -6.7, 7.4);
+            mkBar(0.18, 2.9, 6.7, 7.4);
+            [-3.4, 0, 3.4].forEach(x => {
+                const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.2, 18), neonMat);
+                dot.rotation.x = Math.PI / 2;
+                dot.position.set(x, 7.4, -8.95);
+                duelGroup.add(dot);
+            });
+
+            const doorMat = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.8 });
+            [-1.1, 1.1].forEach(sx => {
+                const door = new THREE.Mesh(new THREE.BoxGeometry(1.6, 4.2, 0.16), doorMat);
+                door.position.set(sx, 2.1, -8.7);
+                duelGroup.add(door);
+            });
+
+            const wood = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.75 });
+            const tableGroup = new THREE.Group();
+            tableGroup.position.set(4.5, 0, -0.3);
+            duelGroup.add(tableGroup);
+            const top = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.2, 26), wood);
+            top.position.y = 1.1; top.castShadow = true; top.receiveShadow = true; tableGroup.add(top);
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.24, 1.05, 14), wood);
+            leg.position.y = 0.55; leg.castShadow = true; tableGroup.add(leg);
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 0.14, 20), wood);
+            base.position.y = 0.07; tableGroup.add(base);
+
+            const gunMetal = new THREE.MeshStandardMaterial({ color: 0x9ca3af, metalness: 0.9, roughness: 0.3 });
+            const gunGrip = new THREE.MeshStandardMaterial({ color: 0x5b3a1e, roughness: 0.7 });
+            const revolver = createRevolverModel(gunMetal, gunGrip);
+            revolver.scale.setScalar(1.15);
+            revolver.position.set(4.5, 1.34, -0.3);
+            duelGroup.add(revolver);
+            duelAnimated.push({ update: (el) => { revolver.rotation.y = el * 0.5; } });
+
+            const lanternGlass = new THREE.MeshStandardMaterial({ color: 0xf97316, emissive: 0xfb923c, emissiveIntensity: 1.0, roughness: 0.4 });
+            [[-7, 3.8, -3.5], [9.5, 3.8, -3.5], [1.5, 4.4, -7.4]].forEach((p, i) => {
+                const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), lanternGlass);
+                lamp.position.set(p[0], p[1], p[2]);
+                duelGroup.add(lamp);
+                const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.6, 6), beamMat);
+                wire.position.set(p[0], p[1] + 0.9, p[2]);
+                duelGroup.add(wire);
+                const pl = new THREE.PointLight(0xffa04a, 1.25, 20, 2);
+                pl.position.set(p[0], p[1] - 0.1, p[2]);
+                duelGroup.add(pl);
+                duelAnimated.push({ update: (el) => { pl.intensity = 1.1 + Math.sin(el * 3 + i) * 0.22; } });
+            });
+
+            const cactusMat = new THREE.MeshStandardMaterial({ color: 0x4d7c0f, roughness: 0.8 });
+            [[-9.5, -6], [-10, 4], [11.5, -6]].forEach(p => {
+                const c = new THREE.Group();
+                const body2 = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 2.4, 12), cactusMat);
+                body2.position.y = 1.2; body2.castShadow = true; c.add(body2);
+                const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.1, 10), cactusMat);
+                arm1.position.set(0.45, 1.6, 0); arm1.rotation.z = -0.5; arm1.castShadow = true; c.add(arm1);
+                const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.9, 10), cactusMat);
+                arm2.position.set(-0.4, 1.2, 0); arm2.rotation.z = 0.6; arm2.castShadow = true; c.add(arm2);
+                c.position.set(p[0], 0, p[1]);
+                duelGroup.add(c);
+            });
+
+            const barrelMat = new THREE.MeshStandardMaterial({ color: 0x7c4a1e, roughness: 0.85 });
+            [[-6.5, -7.5], [-5.6, -8.1], [10, -7.4], [9.1, -6.7]].forEach(p => {
+                const b = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1.2, 16), barrelMat);
+                b.position.set(p[0], 0.6, p[1]);
+                b.castShadow = true;
+                duelGroup.add(b);
+            });
+
+            duelRivalFigure = createDuelRivalFigure();
+            duelRivalFigure.group.position.set(6.6, 0, -0.6);
+            duelRivalFigure.group.rotation.y = -Math.PI / 2;
+            duelGroup.add(duelRivalFigure.group);
+            duelAnimated.push({
+                update: (el) => {
+                    duelRivalFigure.body.position.y = Math.abs(Math.sin(el * 2)) * 0.05;
+                    duelRivalFigure.armR.rotation.x = -0.45 + Math.sin(el * 2) * 0.2;
+                    duelRivalFigure.head.rotation.y = Math.sin(el * 0.8) * 0.2;
+                }
+            });
+
+            const key = new THREE.DirectionalLight(0xffe6c0, 0.9);
+            key.position.set(-180 + 7, 12, 9);
+            key.target.position.set(-180 + 3, 1, 0);
+            key.castShadow = true;
+            key.shadow.mapSize.set(1024, 1024);
+            key.shadow.camera.left = -14;
+            key.shadow.camera.right = 14;
+            key.shadow.camera.top = 14;
+            key.shadow.camera.bottom = -14;
+            key.shadow.camera.near = 1;
+            key.shadow.camera.far = 45;
+            scene.add(key);
+            scene.add(key.target);
+
+            const warm = new THREE.PointLight(0xff9a4d, 1.0, 26, 2);
+            warm.position.set(-180 + 4, 5, 3);
+            scene.add(warm);
+            duelAnimated.push({ update: (el) => { warm.intensity = 0.95 + Math.sin(el * 2) * 0.15; } });
+        }
+
         function buildMillionShowcase(station) {
             const g = new THREE.Group();
             g.position.set(station.position.x, 0.3, station.position.z);
@@ -4439,6 +5274,28 @@
             g.add(glow);
             hubGroup.add(g);
             station.showcase = { group: g, spinSpeed: 0.7, glow };
+        }
+
+        function buildRevolverShowcase(station) {
+            const g = new THREE.Group();
+            g.position.set(station.position.x, 0.95, station.position.z);
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.62, 0.3, 18),
+                new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6 }));
+            base.position.y = -0.6;
+            base.castShadow = true;
+            g.add(base);
+            const metal = new THREE.MeshStandardMaterial({ color: 0xf97316, metalness: 0.8, roughness: 0.25, emissive: 0xc2410c, emissiveIntensity: 0.55 });
+            const grip = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
+            const gun = createRevolverModel(metal, grip);
+            gun.scale.setScalar(1.5);
+            gun.rotation.z = 0.15;
+            g.add(gun);
+            const glow = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 10),
+                new THREE.MeshBasicMaterial({ color: 0xfdba74 }));
+            glow.position.y = -0.2;
+            g.add(glow);
+            hubGroup.add(g);
+            station.showcase = { group: g, spinSpeed: 0.9, glow };
         }
 
         // ============================================================
@@ -4666,10 +5523,12 @@
             const aimStation = addHubStation('portal', 'aim', 9, -13, '🎯 Aim 3D', 0xf43f5e);
             const connectStation = addHubStation('portal', 'connect', 0, -15, '🔌 Conecta',   0x10b981);
             const millStation = addHubStation('portal', 'millonario', -14, -10, '💰 Millonario', 0xfacc15);
+            const duelStation = addHubStation('portal', 'duelo', 14, -11, '🔫 Duelo VS', 0xf97316);
             buildChefFireShowcase(cocinaStation);
             buildGunShowcase(aimStation);
             buildTowersShowcase(connectStation);
             buildMillionShowcase(millStation);
+            buildRevolverShowcase(duelStation);
 
             const skinStation = addHubStation('skin', null, 13, -6, '👕 Vestidor', 0xa855f7);
             buildSkinRoom(skinStation);
@@ -5352,6 +6211,7 @@
             if (mode !== 'aim') hideAimGameOver();
             if (mode !== 'connect') hideConnectGameOver();
             if (mode !== 'millonario') hideMillionGameOver();
+            if (mode !== 'duelo') hideDuelGameOver();
 
             // Sky/fog: daytime park in the hub, Duck Hunt sky for aim, dark arena elsewhere
             if (mode === 'hub') {
@@ -5370,6 +6230,10 @@
                 scene.background.set(0x0b0714);
                 scene.fog.color.set(0x0b0714);
                 scene.fog.density = 0.013;
+            } else if (mode === 'duelo') {
+                scene.background.set(0x140b06);
+                scene.fog.color.set(0x140b06);
+                scene.fog.density = 0.014;
             } else {
                 scene.background.set(0x090d16);
                 scene.fog.color.set(0x090d16);
@@ -5378,7 +6242,7 @@
             aimGun.visible = (mode === 'aim');
 
             // Keep the sun's shadow frustum over the active arena
-            pointSunAt(mode === 'hub' ? 150 : mode === 'millonario' ? -120 : 0);
+            pointSunAt(mode === 'hub' ? 150 : mode === 'millonario' ? -120 : mode === 'duelo' ? -180 : 0);
 
             // El patio se veia quemado: luz mas suave solo en el hub
             ambientLight.intensity = mode === 'hub' ? 0.34 : 0.65;
@@ -5398,6 +6262,12 @@
                     chefMesh.position.set(3.2, 0, -0.35);
                     chefMesh.rotation.y = 0;
                     chefVel.set(0, 0, 0);
+                } else if (mode === 'duelo') {
+                    // Detrás de la mesa del saloon, de perfil mirando a su rival
+                    if (chefMesh.parent !== duelGroup) duelGroup.add(chefMesh);
+                    chefMesh.position.set(2.6, 0, -0.45);
+                    chefMesh.rotation.y = Math.PI / 2;
+                    chefVel.set(0, 0, 0);
                 } else if (chefMesh.parent !== kitchenGroup) {
                     kitchenGroup.add(chefMesh);
                 }
@@ -5408,11 +6278,13 @@
                 { id: 'overcooked', btn: 'btn-mode-overcooked', activeClass: 'bg-amber-500 text-slate-950 shadow-md' },
                 { id: 'aim', btn: 'btn-mode-aim', activeClass: 'bg-rose-500 text-white shadow-md' },
                 { id: 'connect', btn: 'btn-mode-connect', activeClass: 'bg-emerald-500 text-slate-950 shadow-md' },
-                { id: 'millonario', btn: 'btn-mode-millonario', activeClass: 'bg-yellow-400 text-slate-950 shadow-md' }
+                { id: 'millonario', btn: 'btn-mode-millonario', activeClass: 'bg-yellow-400 text-slate-950 shadow-md' },
+                { id: 'duelo', btn: 'btn-mode-duelo', activeClass: 'bg-orange-500 text-slate-950 shadow-md' }
             ];
 
             modes.forEach(m => {
                 const el = document.getElementById(m.btn);
+                if (!el) return;
                 if (m.id === mode) {
                     el.className = `px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${m.activeClass}`;
                 } else {
@@ -5429,22 +6301,28 @@
             const quickAim = document.getElementById('aim-quick-actions');
             const quickHub = document.getElementById('hub-quick-actions');
             const quickMillion = document.getElementById('million-quick-actions');
+            const quickDuel = document.getElementById('duel-quick-actions');
             const millionPanel = document.getElementById('million-panel');
+            const duelPanel = document.getElementById('duel-panel');
             const crosshair = document.getElementById('fps-crosshair');
             const controlsHint = document.getElementById('hud-controls-hint');
             const ticketHeader = document.getElementById('ticket-header-strip');
             const ticketCard = document.getElementById('mission-ticket-card');
             const hubPrompt = document.getElementById('hub-prompt');
             const bigTimer = document.getElementById('big-timer');
+            const btnTop10 = document.getElementById('btn-top10');
 
             if (quickAim) { quickAim.classList.add('hidden'); quickAim.classList.remove('flex'); }
             if (quickHub) { quickHub.classList.add('hidden'); quickHub.classList.remove('flex'); }
             if (quickMillion) { quickMillion.classList.add('hidden'); quickMillion.classList.remove('flex'); }
             if (millionPanel) { millionPanel.classList.add('hidden'); millionPanel.classList.remove('flex'); }
+            if (quickDuel) { quickDuel.classList.add('hidden'); quickDuel.classList.remove('flex'); }
+            if (duelPanel) { duelPanel.classList.add('hidden'); duelPanel.classList.remove('flex'); }
             if (hubPrompt) { hubPrompt.classList.add('hidden'); hubPrompt.classList.remove('flex'); }
             const skinPanel = document.getElementById('skin-panel');
             if (skinPanel) { skinPanel.classList.add('hidden'); skinPanel.classList.remove('flex'); }
             if (bigTimer) { bigTimer.classList.remove('hidden'); bigTimer.classList.add('flex'); }
+            if (btnTop10) { btnTop10.classList.remove('hidden'); btnTop10.classList.add('flex'); }
 
             if (mode === 'hub') {
                 camTargetPos.set(150, 13, 4 + 11);
@@ -5530,6 +6408,24 @@
                 if (controlsHint) controlsHint.innerHTML = `<kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-yellow-300">Clic</kbd> Elegir respuesta • <kbd class="px-1.5 py-0.5 bg-yellow-400 text-slate-950 font-bold rounded">1-4</kbd> Atajos de teclado • <kbd class="px-1.5 py-0.5 bg-yellow-400 text-slate-950 font-bold rounded">B</kbd> Bailar`;
                 document.getElementById('static-mode-badge').textContent = 'MILLONARIO • LÓGICA';
                 startMillionRun();
+            } else if (mode === 'duelo') {
+                updateDuelCamera(0);
+                quickKitchen.classList.add('hidden');
+                quickConnect.classList.add('hidden');
+                quickConnect.classList.remove('flex');
+                if (quickDuel) { quickDuel.classList.remove('hidden'); quickDuel.classList.add('flex'); }
+                if (duelPanel) { duelPanel.classList.remove('hidden'); duelPanel.classList.add('flex'); }
+                if (btnTop10) { btnTop10.classList.add('hidden'); btnTop10.classList.remove('flex'); }
+                ticketCard.classList.add('hidden');
+                crosshair.classList.add('hidden');
+                crosshair.classList.remove('flex');
+                container.className = 'pointer-mode';
+                hideDuelGameOver();
+                updateDuelDifficultyButtons();
+                updateDuelLivesButtons();
+                if (controlsHint) controlsHint.innerHTML = `<kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-orange-300">Clic</kbd> Elegir respuesta • <kbd class="px-1.5 py-0.5 bg-orange-500 text-slate-950 font-bold rounded">1-4</kbd> Atajos • <kbd class="px-1.5 py-0.5 bg-orange-500 text-slate-950 font-bold rounded">1-3</kbd> Poderes • <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-orange-300">B</kbd> Bailar`;
+                document.getElementById('static-mode-badge').textContent = 'DUELO • RULETA RUSA';
+                startDuelRun();
             }
 
             updateBigTimer();
@@ -5554,6 +6450,8 @@
                 spawn3DConnectNodes();
             } else if (currentMode === 'millonario') {
                 if (!millGameOver && !millLocked) nextMillionQuestion();
+            } else if (currentMode === 'duelo') {
+                if (!duelGameOver && !duelLocked && duelPhase === 'question') nextDuelQuestion();
             }
             updateBigTimer();
         }
@@ -5593,6 +6491,7 @@
                 playSFX('pickup');
                 updateBigTimer();
                 refreshMillionReady();
+                refreshDuelReady();
             }
 
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
@@ -5661,6 +6560,7 @@
                 playSFX('pickup');
                 updateBigTimer();
                 refreshMillionReady();
+                refreshDuelReady();
             }
             const k = e.key.toLowerCase();
             if (k === 'w' || e.key === 'ArrowUp') chefKeys.w = true;
@@ -5679,12 +6579,19 @@
                 e.preventDefault();
                 deliverKitchenOrder();
             }
-            if (k === 'b' && (currentMode === 'overcooked' || currentMode === 'hub' || currentMode === 'millonario')) {
+            if (k === 'b' && (currentMode === 'overcooked' || currentMode === 'hub' || currentMode === 'millonario' || currentMode === 'duelo')) {
                 e.preventDefault();
                 triggerGangnamStyle();
             }
             if (currentMode === 'millonario' && !wasAwaitingStart && e.key >= '1' && e.key <= '4') {
                 answerMillion(parseInt(e.key, 10) - 1);
+            }
+            if (currentMode === 'duelo' && !wasAwaitingStart) {
+                if (duelPhase === 'power' && e.key >= '1' && e.key <= '3') {
+                    duelShoot(DUEL_POWER_KEYS[parseInt(e.key, 10) - 1]);
+                } else if (duelPhase === 'question' && e.key >= '1' && e.key <= '4') {
+                    answerDuel(parseInt(e.key, 10) - 1);
+                }
             }
         });
 
@@ -5725,6 +6632,7 @@
             if (currentMode === 'aim' && aimGameOver) return;
             if (currentMode === 'connect' && connectGameOver) return;
             if (currentMode === 'millonario' && (millGameOver || millLocked)) return;
+            if (currentMode === 'duelo' && (duelGameOver || duelLocked || duelPhase !== 'question')) return;
             let tickStep = 1;
             if (currentMode === 'connect') {
                 if (statHits >= 6) tickStep = 4;
@@ -5740,6 +6648,8 @@
                     endConnectGame();
                 } else if (currentMode === 'millonario') {
                     handleMillionTimeout();
+                } else if (currentMode === 'duelo') {
+                    handleDuelTimeout();
                 } else {
                     recordOutcome(0, false, 'Tiempo de la ronda agotado. Generando nuevo desafío...');
                     triggerNewChallenge();
@@ -5824,6 +6734,12 @@
                 for (let mi = 0; mi < millionAnimated.length; mi++) millionAnimated[mi].update(elapsed, dt);
             }
 
+            if (currentMode === 'duelo') {
+                if (chefMesh) { chefMesh.rotation.y = Math.PI / 2; animateChef(dt, elapsed); }
+                for (let di = 0; di < duelAnimated.length; di++) duelAnimated[di].update(elapsed, dt);
+                updateDuelCamera(elapsed);
+            }
+
             updateAimBullets(dt);
             updateConnectFx(dt);
 
@@ -5866,6 +6782,7 @@
             build3DAimArena();
             build3DConnectArena();
             build3DMillionArena();
+            build3DDuelArena();
             build3DHubArena();
             buildAimGun();
             renderLeaderboardUI();
