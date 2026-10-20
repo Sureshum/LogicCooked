@@ -2479,6 +2479,8 @@
         const AIM_FIELD_SIZES = { easy: 7, normal: 10, hard: 13 };
         function aimFieldSize() { return AIM_FIELD_SIZES[aimDifficulty] || 10; }
         const AIM_BOUNDS = { minX: -9, maxX: 9, minY: 1.9, maxY: 7.2, minZ: -8.5, maxZ: -0.6 };
+        // Zona del HUD de misiones (arriba a la derecha): las bolas no pueden pasar por ahi
+        const AIM_HUD_ZONE = { minX: 1.5, minY: 4.0 };
         const AIM_PALETTE = [0xf59e0b, 0x38bdf8, 0xa855f7, 0x22d3ee, 0xf472b6, 0x84cc16, 0xfb923c, 0x818cf8];
 
         // Reusable pool of logical classifications. Every option is a plausible
@@ -2674,9 +2676,11 @@
         }
 
         function randAimPos() {
+            const y = randRange(AIM_BOUNDS.minY + 0.6, AIM_BOUNDS.maxY - 0.6);
+            const maxX = y > AIM_HUD_ZONE.minY ? AIM_HUD_ZONE.minX - 0.8 : AIM_BOUNDS.maxX - 1;
             return new THREE.Vector3(
-                randRange(AIM_BOUNDS.minX + 1, AIM_BOUNDS.maxX - 1),
-                randRange(AIM_BOUNDS.minY + 0.6, AIM_BOUNDS.maxY - 0.6),
+                randRange(AIM_BOUNDS.minX + 1, Math.max(AIM_BOUNDS.minX + 1, maxX)),
+                y,
                 randRange(AIM_BOUNDS.minZ + 1, AIM_BOUNDS.maxZ - 1)
             );
         }
@@ -2862,6 +2866,18 @@
                 m.position.x = THREE.MathUtils.clamp(m.position.x, AIM_BOUNDS.minX, AIM_BOUNDS.maxX);
                 m.position.y = THREE.MathUtils.clamp(m.position.y, AIM_BOUNDS.minY, AIM_BOUNDS.maxY);
                 m.position.z = THREE.MathUtils.clamp(m.position.z, AIM_BOUNDS.minZ, AIM_BOUNDS.maxZ);
+                // No dejar que las bolas crucen la zona del HUD de misiones (arriba-derecha)
+                if (m.position.x > AIM_HUD_ZONE.minX && m.position.y > AIM_HUD_ZONE.minY) {
+                    const penX = m.position.x - AIM_HUD_ZONE.minX;
+                    const penY = m.position.y - AIM_HUD_ZONE.minY;
+                    if (penX < penY) {
+                        m.position.x = AIM_HUD_ZONE.minX;
+                        ball.vel.x = -Math.abs(ball.vel.x);
+                    } else {
+                        m.position.y = AIM_HUD_ZONE.minY;
+                        ball.vel.y = -Math.abs(ball.vel.y);
+                    }
+                }
             });
         }
 
