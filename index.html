@@ -12,7 +12,7 @@
     <script src="vendor/three.min.js"></script>
     <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="src/style.css?v=28">
+    <link rel="stylesheet" href="src/style.css?v=29">
 
     <!-- TEMA DE UI GUARDADO: se aplica antes del primer pintado para evitar parpadeo -->
     <script>
@@ -198,8 +198,8 @@
                     </div>
                     <div class="admin-slider-row">
                         <span><i class="fa-solid fa-sun mr-1"></i> Brillo del patio</span>
-                        <input type="range" id="admin-brightness" min="30" max="100" value="52" class="admin-slider">
-                        <span id="admin-brightness-label" class="mono-font text-amber-300 text-sm w-8 text-right">52</span>
+                        <input type="range" id="admin-brightness" min="30" max="100" value="70" class="admin-slider">
+                        <span id="admin-brightness-label" class="mono-font text-amber-300 text-sm w-8 text-right">70</span>
                     </div>
                     <div class="admin-slider-row admin-stack-row">
                         <span><i class="fa-solid fa-expand mr-1"></i> Tamaño de la UI</span>
@@ -330,6 +330,12 @@
                 <button onclick="toggleAudio()" id="btn-audio"
                     class="w-7 h-7 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-amber-400 transition">
                     <i id="icon-audio" class="fa-solid fa-volume-high text-[11px]"></i>
+                </button>
+
+                <button onclick="backToMenu()" title="Volver al menú"
+                    class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Menú</span>
                 </button>
             </div>
         </div>
@@ -927,9 +933,9 @@
     </div>
 
     <!-- GAME SCRIPTS -->
-    <script src="src/game.js?v=85"></script>
+    <script src="src/game.js?v=86"></script>
     <script src="src/landing.js?v=65"></script>
-    <script src="src/admin.js?v=2"></script>
+    <script src="src/admin.js?v=3"></script>
 
     <!-- OFFLINE / PWA: registra el service worker para jugar sin conexion -->
     <script>

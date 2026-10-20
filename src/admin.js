@@ -61,7 +61,7 @@
     const musicEnabled = load(MUSIC_ENABLED_KEY, '1') === '1';
     const sfxEnabled = load(SFX_ENABLED_KEY, '1') === '1';
     const musicVol = Math.min(30, Math.max(0, parseInt(load(MUSIC_VOL_KEY, '5'), 10) || 5));
-    const brightness = Math.min(100, Math.max(30, parseInt(load(BRIGHTNESS_KEY, '52'), 10) || 52));
+    const brightness = Math.min(100, Math.max(30, parseInt(load(BRIGHTNESS_KEY, '70'), 10) || 70));
     const uiSize = load(UISIZE_KEY, 'small');
     applyBrightness(brightness);
     applyUISize(uiSize);
@@ -149,7 +149,7 @@
     // ---- Brillo del patio ----
     if (brightnessSlider) {
         brightnessSlider.addEventListener('input', () => {
-            const v = Math.min(100, Math.max(30, parseInt(brightnessSlider.value, 10) || 52));
+            const v = Math.min(100, Math.max(30, parseInt(brightnessSlider.value, 10) || 70));
             if (brightnessLabel) brightnessLabel.textContent = String(v);
             applyBrightness(v);
         });

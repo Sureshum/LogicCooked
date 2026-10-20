@@ -5335,6 +5335,13 @@
             if (hubNearStation.type === 'portal') { switchGameMode(hubNearStation.mode); }
         }
 
+        function backToMenu() {
+            playSFX('pickup');
+            switchGameMode('hub');
+            const landing = document.getElementById('landing-screen');
+            if (landing) landing.classList.remove('hidden');
+        }
+
         function switchGameMode(mode) {
             playSFX('pickup');
             currentMode = mode;
@@ -5373,8 +5380,8 @@
             pointSunAt(mode === 'hub' ? 150 : mode === 'millonario' ? -120 : 0);
 
             // El patio se veia quemado: luz mas suave solo en el hub
-            ambientLight.intensity = mode === 'hub' ? 0.28 : 0.65;
-            dirLight.intensity = mode === 'hub' ? 0.38 : 0.95;
+            ambientLight.intensity = mode === 'hub' ? 0.34 : 0.65;
+            dirLight.intensity = mode === 'hub' ? 0.48 : 0.95;
 
             // The chef model travels with the player: hub and kitchen share it
             if (chefMesh) {
