@@ -2685,8 +2685,9 @@
             );
         }
 
-        function aimLabelHTML(text) {
-            return `<div class="px-3 py-1.5 rounded-xl bg-slate-950/90 border-2 border-rose-500 text-[11px] sm:text-xs font-extrabold text-white shadow-2xl whitespace-nowrap">🎯 ${text}</div>`;
+        function aimLabelHTML(text, colorHex) {
+            const c = '#' + (colorHex || 0xf43f5e).toString(16).padStart(6, '0');
+            return `<div class="aim-ball-label" style="border-color:${c}; box-shadow:0 0 16px ${c}66, 0 6px 18px rgba(0,0,0,0.55);">🎯 ${text}</div>`;
         }
 
         function createAimBall(isCorrect, labelText, pos, radius) {
@@ -2706,7 +2707,7 @@
             aimGroup.add(mesh);
             clickableMeshes.push(mesh);
 
-            const labelObj = create3DLabel(mesh, aimLabelHTML(labelText), r + 0.75, 'aim');
+            const labelObj = create3DLabel(mesh, aimLabelHTML(labelText, color), r + 0.85, 'aim');
 
             const ball = {
                 mesh,
@@ -2771,7 +2772,7 @@
                 b.labelText = text;
                 b.mesh.userData.labelText = text;
                 b.mesh.userData.formula = item.formula;
-                b.labelObj.div.innerHTML = aimLabelHTML(text);
+                b.labelObj.div.innerHTML = aimLabelHTML(text, b.mesh.material.color.getHex());
             });
             spawnAimCorrect();
             ensureAimCorrectPresent();
