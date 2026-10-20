@@ -12,7 +12,7 @@
     <script src="vendor/three.min.js"></script>
     <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
     <link href="vendor/fonts/fonts.css" rel="stylesheet">
-    <link rel="stylesheet" href="src/style.css?v=31">
+    <link rel="stylesheet" href="src/style.css?v=32">
 
     <!-- TEMA DE UI GUARDADO: se aplica antes del primer pintado para evitar parpadeo -->
     <script>
@@ -732,30 +732,30 @@
 
     <!-- LEADERBOARD MODAL -->
     <div id="leaderboardModal"
-        class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
-        <div class="glass-panel rounded-3xl max-w-md w-full p-6 border border-amber-500/30 shadow-2xl">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div class="flex items-center gap-2.5">
-                    <i class="fa-solid fa-trophy text-amber-400 text-xl"></i>
-                    <div>
-                        <h3 id="leaderboard-title" class="text-lg font-bold text-white">Clasificación Top 10</h3>
-                        <p id="leaderboard-subtitle" class="text-xs text-slate-400">Los 10 Mejores Arquitectos Lógicos en 3D</p>
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-start justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+        <div class="glass-panel rounded-3xl max-w-md w-full p-4 sm:p-6 border border-amber-500/30 shadow-2xl my-auto">
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <i class="fa-solid fa-trophy text-amber-400 text-xl shrink-0"></i>
+                    <div class="min-w-0">
+                        <h3 id="leaderboard-title" class="text-base sm:text-lg font-bold text-white truncate">Clasificación Top 10</h3>
+                        <p id="leaderboard-subtitle" class="text-[11px] sm:text-xs text-slate-400 truncate">Los 10 Mejores Arquitectos Lógicos en 3D</p>
                     </div>
                 </div>
-                <button onclick="toggleLeaderboardDrawer()"
-                    class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center">
+                <button onclick="toggleLeaderboardDrawer()" title="Cerrar"
+                    class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center shrink-0">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <div
-                class="grid grid-cols-3 gap-3 items-end pt-6 pb-3 px-3 my-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+                class="grid grid-cols-3 gap-2 sm:gap-3 items-end pt-5 sm:pt-6 pb-3 px-2 sm:px-3 my-3 sm:my-4 bg-slate-950/80 rounded-2xl border border-slate-800">
                 <div class="flex flex-col items-center">
                     <i class="fa-solid fa-medal text-slate-300 text-lg mb-1"></i>
                     <span id="modal-p2-name" class="text-xs font-bold text-slate-200 truncate max-w-full">---</span>
                     <span id="modal-p2-score" class="mono-font text-[11px] text-slate-400 mb-1">0</span>
                     <div
-                        class="w-full h-16 bg-gradient-to-t from-slate-700 to-slate-400/70 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-lg">
+                        class="w-full h-14 sm:h-16 bg-gradient-to-t from-slate-700 to-slate-400/70 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-base sm:text-lg">
                         2°</div>
                 </div>
                 <div class="flex flex-col items-center">
@@ -763,7 +763,7 @@
                     <span id="modal-p1-name" class="text-xs font-bold text-amber-300 truncate max-w-full">---</span>
                     <span id="modal-p1-score" class="mono-font text-xs font-extrabold text-amber-400 mb-1">0</span>
                     <div
-                        class="w-full h-24 bg-gradient-to-t from-amber-600 to-amber-300 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-2xl shadow-lg shadow-amber-500/30">
+                        class="w-full h-20 sm:h-24 bg-gradient-to-t from-amber-600 to-amber-300 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-xl sm:text-2xl shadow-lg shadow-amber-500/30">
                         1°</div>
                 </div>
                 <div class="flex flex-col items-center">
@@ -771,7 +771,7 @@
                     <span id="modal-p3-name" class="text-xs font-bold text-amber-500 truncate max-w-full">---</span>
                     <span id="modal-p3-score" class="mono-font text-[11px] text-slate-400 mb-1">0</span>
                     <div
-                        class="w-full h-12 bg-gradient-to-t from-amber-900 to-amber-600/80 rounded-t-xl flex items-center justify-center font-extrabold text-white text-base">
+                        class="w-full h-10 sm:h-12 bg-gradient-to-t from-amber-900 to-amber-600/80 rounded-t-xl flex items-center justify-center font-extrabold text-white text-sm sm:text-base">
                         3°</div>
                 </div>
             </div>
@@ -788,7 +788,7 @@
 
             <div id="modal-leaderboard-rows" class="space-y-2 mb-4"></div>
 
-            <div class="flex justify-end gap-2">
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
                 <button onclick="savePlayerToLeaderboard()"
                     class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
                     <i class="fa-solid fa-floppy-disk mr-1"></i> Registrar Mi Puntaje Actual
@@ -1114,7 +1114,7 @@
     </div>
 
     <!-- GAME SCRIPTS -->
-    <script src="src/game.js?v=91"></script>
+    <script src="src/game.js?v=92"></script>
     <script src="src/landing.js?v=65"></script>
     <script src="src/admin.js?v=3"></script>
 
