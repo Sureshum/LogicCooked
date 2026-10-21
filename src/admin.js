@@ -109,8 +109,10 @@
 
     function updateColorPreview() {
         if (!colorPreview) return;
-        const b = Math.min(150, Math.max(40, parseInt(brightnessSlider ? brightnessSlider.value : brightness, 10) || 100));
-        const s = Math.min(150, Math.max(40, parseInt(saturationSlider ? saturationSlider.value : saturation, 10) || 100));
+        const bEl = document.getElementById('admin-brightness');
+        const sEl = document.getElementById('admin-saturation');
+        const b = Math.min(150, Math.max(40, parseInt((bEl || brightnessSlider)?.value, 10) || 100));
+        const s = Math.min(150, Math.max(40, parseInt((sEl || saturationSlider)?.value, 10) || 100));
         colorPreview.style.filter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
     }
     updateColorPreview();
@@ -176,19 +178,23 @@
     }
 
     // ---- Brillo del juego ----
-    if (brightnessSlider) {
-        brightnessSlider.addEventListener('input', () => {
-            const v = applyBrightness(brightnessSlider.value);
-            if (brightnessLabel) brightnessLabel.textContent = String(v) + '%';
+    const brightnessSliderEl = brightnessSlider || document.getElementById('admin-brightness');
+    const brightnessLabelEl = brightnessLabel || document.getElementById('admin-brightness-label');
+    if (brightnessSliderEl) {
+        brightnessSliderEl.addEventListener('input', () => {
+            const v = applyBrightness(brightnessSliderEl.value);
+            if (brightnessLabelEl) brightnessLabelEl.textContent = String(v) + '%';
             updateColorPreview();
         });
     }
 
     // ---- Saturación del juego ----
-    if (saturationSlider) {
-        saturationSlider.addEventListener('input', () => {
-            const v = applySaturation(saturationSlider.value);
-            if (saturationLabel) saturationLabel.textContent = String(v) + '%';
+    const saturationSliderEl = saturationSlider || document.getElementById('admin-saturation');
+    const saturationLabelEl = saturationLabel || document.getElementById('admin-saturation-label');
+    if (saturationSliderEl) {
+        saturationSliderEl.addEventListener('input', () => {
+            const v = applySaturation(saturationSliderEl.value);
+            if (saturationLabelEl) saturationLabelEl.textContent = String(v) + '%';
             updateColorPreview();
         });
     }
