@@ -1,3 +1,16 @@
+        // ---- Pipeline de color (three r128 no tiene gestion de color) ----
+        // El renderer trabaja en lineal, asi que todos los hex del juego (que
+        // estan pensados en sRGB) se convierten al crearse el Color. Sin esto
+        // los colores se aplanan y se ven apagados/raros.
+        (function setupColorPipeline() {
+            if (typeof THREE === 'undefined' || !THREE.Color) return;
+            const proto = THREE.Color.prototype;
+            const setHex = proto.setHex;
+            const setStyle = proto.setStyle;
+            proto.setHex = function (hex) { setHex.call(this, hex); return this.convertSRGBToLinear(); };
+            proto.setStyle = function (style) { setStyle.call(this, style); return this.convertSRGBToLinear(); };
+        })();
+
         let soundEnabled = true;
         let sfxEnabled = true;
         let audioCtx = null;
@@ -389,17 +402,18 @@
         scene.fog = new THREE.FogExp2(0x111827, 0.01);
 
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.LinearToneMapping, toneMappingExposure: 0.9 });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.LinearToneMapping, toneMappingExposure: 1.0 });
+        renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xf2ece0, 0.58);
+        const ambientLight = new THREE.AmbientLight(0xf2ece0, 0.6);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xfff0d9, 0.85);
+        const dirLight = new THREE.DirectionalLight(0xfff0d9, 0.9);
         dirLight.position.set(12, 22, 14);
         dirLight.castShadow = true;
         scene.add(dirLight);
@@ -2838,7 +2852,7 @@
                 b.labelText = text;
                 b.mesh.userData.labelText = text;
                 b.mesh.userData.formula = item.formula;
-                b.labelObj.div.innerHTML = aimLabelHTML(text, b.mesh.material.color.getHex());
+                b.labelObj.div.innerHTML = aimLabelHTML(text, b.mesh.material.color.clone().convertLinearToSRGB().getHex());
             });
             spawnAimCorrect();
             ensureAimCorrectPresent();
@@ -6276,9 +6290,10 @@
             // Keep the sun's shadow frustum over the active arena
             pointSunAt(mode === 'hub' ? 150 : mode === 'millonario' ? -120 : mode === 'duelo' ? -180 : 0);
 
-            // El patio se veia quemado: luz mas suave solo en el hub
-            ambientLight.intensity = mode === 'hub' ? 0.34 : 0.65;
-            dirLight.intensity = mode === 'hub' ? 0.48 : 0.95;
+            // Luz equilibrada por modo: el patio es exterior y soleado,
+            // los interiores (cocina, plató, saloon) algo mas suaves
+            ambientLight.intensity = mode === 'hub' ? 0.68 : 0.58;
+            dirLight.intensity = mode === 'hub' ? 0.92 : 0.88;
 
             // The chef model travels with the player: hub and kitchen share it
             if (chefMesh) {

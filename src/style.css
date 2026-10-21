@@ -35,14 +35,10 @@
             z-index: 1;
         }
 
-        /* Patio (modo hub): la escena 3D se ve demasiado saturada */
+        /* Filtro solo para los ajustes del panel admin (por defecto neutro) */
         #webgl-container canvas {
-            filter: brightness(calc(var(--game-brightness, 1) * 0.985)) saturate(calc(var(--game-saturation, 1) * 0.58)) contrast(0.94) hue-rotate(-1deg);
+            filter: brightness(var(--game-brightness, 1)) saturate(var(--game-saturation, 1));
             transition: filter 0.4s ease;
-        }
-
-        body.mode-hub #webgl-container canvas {
-            filter: brightness(calc(var(--game-brightness, 1) * var(--hub-brightness, 0.7) * 0.985)) saturate(calc(var(--game-saturation, 1) * 0.52 * var(--hub-saturation, 0.85))) contrast(0.94) hue-rotate(-1deg);
         }
 
         #labels-container {
