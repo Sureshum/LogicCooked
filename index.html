@@ -1251,10 +1251,25 @@
             color: white;
         }
         
+        /* No mostrar joystick ni botones de movimiento en modos sin movimiento WASD */
+        body.mode-aim .joystick-zone,
+        body.mode-millonario .joystick-zone,
+        body.mode-duelo .joystick-zone,
+        body.mode-connect .joystick-zone {
+            display: none !important;
+        }
+        
         body.mode-millonario .mobile-interact,
         body.mode-duelo .mobile-interact,
-        body.mode-connect .mobile-interact {
-            display: none;
+        body.mode-connect .mobile-interact,
+        body.mode-aim .mobile-deliver,
+        body.mode-aim .mobile-menu {
+            display: none !important;
+        }
+        
+        body.mode-millonario .mobile-menu,
+        body.mode-duelo .mobile-menu {
+            display: flex !important;
         }
     </style>
 
@@ -1326,6 +1341,25 @@
                         interactWithNearestStation();
                     } else if (window.currentMode === 'hub' && typeof interactHubStation === 'function') {
                         interactHubStation();
+                    } else if (window.currentMode === 'aim') {
+                        // En móvil, disparar al centro con toque
+                        if (window.aimGameOver) return;
+                        const mouse = new THREE.Vector2(0, 0);
+                        const raycaster = new THREE.Raycaster();
+                        if (window.camera) raycaster.setFromCamera(mouse, window.camera);
+                        const startVec = new THREE.Vector3();
+                        if (window.aimGunMuzzle) window.aimGunMuzzle.getWorldPosition(startVec);
+                        else if (window.camera) startVec.copy(window.camera.position);
+                        const farPoint = raycaster.ray.at(40, new THREE.Vector3());
+                        if (typeof spawnAimBullet === 'function') {
+                            spawnAimBullet(startVec, farPoint, false);
+                        }
+                        if (window.aimGunFlash) {
+                            window.aimGunFlash.visible = true;
+                            window.aimGunFlash.rotation.z = Math.random() * Math.PI;
+                            if (window.clock) window.aimGunFlashUntil = window.clock.getElapsedTime() + 0.07;
+                        }
+                        if (typeof playSFX === 'function') playSFX('laser');
                     }
                 }, { passive: false });
             }
