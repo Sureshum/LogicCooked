@@ -102,17 +102,21 @@
     if (sfxToggle) sfxToggle.checked = sfxEnabled;
     if (volSlider) volSlider.value = String(musicVol);
     if (volLabel) volLabel.textContent = String(musicVol);
-    if (brightnessSlider) brightnessSlider.value = String(brightness);
-    if (brightnessLabel) brightnessLabel.textContent = String(brightness) + '%';
-    if (saturationSlider) saturationSlider.value = String(saturation);
-    if (saturationLabel) saturationLabel.textContent = String(saturation) + '%';
+    const bInit = document.getElementById('admin-brightness') || brightnessSlider;
+    const sInit = document.getElementById('admin-saturation') || saturationSlider;
+    const bLabelInit = document.getElementById('admin-brightness-label') || brightnessLabel;
+    const sLabelInit = document.getElementById('admin-saturation-label') || saturationLabel;
+    if (bInit) bInit.value = String(brightness);
+    if (sInit) sInit.value = String(saturation);
+    if (bLabelInit) bLabelInit.textContent = String(brightness) + '%';
+    if (sLabelInit) sLabelInit.textContent = String(saturation) + '%';
 
     function updateColorPreview() {
         if (!colorPreview) return;
         const bEl = document.getElementById('admin-brightness');
         const sEl = document.getElementById('admin-saturation');
-        const b = Math.min(150, Math.max(40, parseInt((bEl || brightnessSlider)?.value, 10) || 100));
-        const s = Math.min(150, Math.max(40, parseInt((sEl || saturationSlider)?.value, 10) || 100));
+        const b = Math.min(150, Math.max(40, parseInt(bEl?.value, 10) || 100));
+        const s = Math.min(150, Math.max(40, parseInt(sEl?.value, 10) || 100));
         colorPreview.style.filter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
     }
     updateColorPreview();
@@ -178,25 +182,25 @@
     }
 
     // ---- Brillo del juego ----
-    const brightnessSliderEl = brightnessSlider || document.getElementById('admin-brightness');
-    const brightnessLabelEl = brightnessLabel || document.getElementById('admin-brightness-label');
+    const brightnessSliderEl = document.getElementById('admin-brightness');
+    const brightnessLabelEl = document.getElementById('admin-brightness-label');
     if (brightnessSliderEl) {
-        brightnessSliderEl.addEventListener('input', () => {
+        brightnessSliderEl.oninput = () => {
             const v = applyBrightness(brightnessSliderEl.value);
             if (brightnessLabelEl) brightnessLabelEl.textContent = String(v) + '%';
             updateColorPreview();
-        });
+        };
     }
 
     // ---- Saturación del juego ----
-    const saturationSliderEl = saturationSlider || document.getElementById('admin-saturation');
-    const saturationLabelEl = saturationLabel || document.getElementById('admin-saturation-label');
+    const saturationSliderEl = document.getElementById('admin-saturation');
+    const saturationLabelEl = document.getElementById('admin-saturation-label');
     if (saturationSliderEl) {
-        saturationSliderEl.addEventListener('input', () => {
+        saturationSliderEl.oninput = () => {
             const v = applySaturation(saturationSliderEl.value);
             if (saturationLabelEl) saturationLabelEl.textContent = String(v) + '%';
             updateColorPreview();
-        });
+        };
     }
 
     // ---- Tamano de la UI ----
