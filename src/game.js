@@ -385,8 +385,8 @@
         const labelsContainer = document.getElementById('labels-container');
 
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x0f162b);
-        scene.fog = new THREE.FogExp2(0x0f162b, 0.012);
+        scene.background = new THREE.Color(0x111827);
+        scene.fog = new THREE.FogExp2(0x111827, 0.01);
 
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -396,10 +396,10 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xf2e6d2, 0.72);
+        const ambientLight = new THREE.AmbientLight(0xf1e5d3, 0.65);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xfff2cc, 1.05);
+        const dirLight = new THREE.DirectionalLight(0xfff1cc, 0.95);
         dirLight.position.set(12, 22, 14);
         dirLight.castShadow = true;
         scene.add(dirLight);
@@ -884,7 +884,7 @@
             const FLOOR_HALF_X = 12;
             const FLOOR_HALF_Z = 9;
             const floorGeo = new THREE.BoxGeometry(FLOOR_HALF_X * 2, 0.5, FLOOR_HALF_Z * 2);
-            const floorMat = new THREE.MeshStandardMaterial({ color: 0x3f5266, roughness: 0.68 });
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.position.y = -0.25;
             floor.receiveShadow = true;
@@ -892,8 +892,8 @@
 
             // Checkerboard tile floor for a cozy kitchen look
             const tileGroup = new THREE.Group();
-            const tileMatA = new THREE.MeshStandardMaterial({ color: 0x516a80, roughness: 0.6 });
-            const tileMatB = new THREE.MeshStandardMaterial({ color: 0x5c758f, roughness: 0.6 });
+            const tileMatA = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.62 });
+            const tileMatB = new THREE.MeshStandardMaterial({ color: 0x52607a, roughness: 0.62 });
             const tileSize = 2;
             for (let tx = -FLOOR_HALF_X; tx < FLOOR_HALF_X; tx += tileSize) {
                 for (let tz = -FLOOR_HALF_Z; tz < FLOOR_HALF_Z; tz += tileSize) {
@@ -907,13 +907,13 @@
             kitchenGroup.add(tileGroup);
 
             // Back wall (with window panes) and side walls (repositioned per difficulty)
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xb08a52, roughness: 0.82 });
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x9a7a44, roughness: 0.86 });
             const backWall = new THREE.Mesh(new THREE.BoxGeometry(1, 5, 0.4), wallMat);
             backWall.receiveShadow = true;
             kitchenGroup.add(backWall);
             kitchenArenaWalls.back = backWall;
 
-            const windowMat = new THREE.MeshStandardMaterial({ color: 0xd6ecff, emissive: 0x7fb9e6, emissiveIntensity: 0.32, roughness: 0.22 });
+            const windowMat = new THREE.MeshStandardMaterial({ color: 0xcfe8ff, emissive: 0x8fc2ff, emissiveIntensity: 0.28, roughness: 0.24 });
             kitchenArenaWalls.windows = [];
             [-2, -1, 0, 1, 2].forEach(() => {
                 const win = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.8, 0.15), windowMat);
@@ -929,8 +929,8 @@
             kitchenArenaWalls.right = rightWall;
 
             // Hanging lamps over the kitchen
-            const lampMat = new THREE.MeshStandardMaterial({ color: 0xf2a65a, emissive: 0xffd08a, emissiveIntensity: 0.4 });
-            const lampBulbMat = new THREE.MeshStandardMaterial({ color: 0xffe7b3, emissive: 0xffe7b3, emissiveIntensity: 1.25 });
+            const lampMat = new THREE.MeshStandardMaterial({ color: 0xe89a4a, emissive: 0xffc57a, emissiveIntensity: 0.36 });
+            const lampBulbMat = new THREE.MeshStandardMaterial({ color: 0xffe3b3, emissive: 0xffe3b3, emissiveIntensity: 1.15 });
             kitchenArenaWalls.lamps = [];
             [-2, -1, 0, 1, 2].forEach(() => {
                 const lamp = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.7, 20), lampMat);
@@ -942,9 +942,9 @@
             positionKitchenArena('easy');
 
             const tableGroup = new THREE.Group();
-            const steelMat = new THREE.MeshStandardMaterial({ color: 0x8f9fb3, roughness: 0.38, metalness: 0.25 });
-            const counterMat = new THREE.MeshStandardMaterial({ color: 0x7f93a8, roughness: 0.42, metalness: 0.16 });
-            const woodMat = new THREE.MeshStandardMaterial({ color: 0xc89a4a, roughness: 0.62 });
+            const steelMat = new THREE.MeshStandardMaterial({ color: 0x7f8ea3, roughness: 0.42, metalness: 0.22 });
+            const counterMat = new THREE.MeshStandardMaterial({ color: 0x6f7f94, roughness: 0.45, metalness: 0.14 });
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0xb08944, roughness: 0.66 });
 
             const tableTop = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.18, 2.4), counterMat);
             tableTop.position.y = 0.96;
