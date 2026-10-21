@@ -389,17 +389,17 @@
         scene.fog = new THREE.FogExp2(0x111827, 0.01);
 
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', toneMapping: THREE.LinearToneMapping, toneMappingExposure: 0.9 });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xf1e5d3, 0.65);
+        const ambientLight = new THREE.AmbientLight(0xf2ece0, 0.58);
         scene.add(ambientLight);
 
-        const dirLight = new THREE.DirectionalLight(0xfff1cc, 0.95);
+        const dirLight = new THREE.DirectionalLight(0xfff0d9, 0.85);
         dirLight.position.set(12, 22, 14);
         dirLight.castShadow = true;
         scene.add(dirLight);
@@ -929,8 +929,8 @@
             kitchenArenaWalls.right = rightWall;
 
             // Hanging lamps over the kitchen
-            const lampMat = new THREE.MeshStandardMaterial({ color: 0xe89a4a, emissive: 0xffc57a, emissiveIntensity: 0.36 });
-            const lampBulbMat = new THREE.MeshStandardMaterial({ color: 0xffe3b3, emissive: 0xffe3b3, emissiveIntensity: 1.15 });
+            const lampMat = new THREE.MeshStandardMaterial({ color: 0xc8954a, emissive: 0xf0c27a, emissiveIntensity: 0.28 });
+            const lampBulbMat = new THREE.MeshStandardMaterial({ color: 0xede3c6, emissive: 0xf2dfbc, emissiveIntensity: 0.95 });
             kitchenArenaWalls.lamps = [];
             [-2, -1, 0, 1, 2].forEach(() => {
                 const lamp = new THREE.Mesh(new THREE.ConeGeometry(1.1, 0.7, 20), lampMat);
