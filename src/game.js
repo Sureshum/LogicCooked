@@ -539,7 +539,7 @@
         let chefMaterials = null;
         let chefSkinIndex = 0;
         const CHEF_SKINS = [
-            { name: 'Clásico', coat: 0xf1f5f9, apron: 0xf59e0b, hat: 0xffffff, skin: 0xf3c99a, dark: 0x1f2937, shoe: 0x334155 },
+            { name: 'Clásico', coat: 0xe5e7eb, apron: 0xf59e0b, hat: 0xd8d5cc, skin: 0xf3c99a, dark: 0x1f2937, shoe: 0x334155 },
             { name: 'Rojo',    coat: 0xef4444, apron: 0xfee2e2, hat: 0xdc2626, skin: 0xf3c99a, dark: 0x1f2937, shoe: 0x7f1d1d },
             { name: 'Verde',   coat: 0x22c55e, apron: 0xecfdf5, hat: 0x15803d, skin: 0xf3c99a, dark: 0x1f2937, shoe: 0x14532d },
             { name: 'Púrpura', coat: 0xa855f7, apron: 0xfaf5ff, hat: 0x7e22ce, skin: 0xf3c99a, dark: 0x1f2937, shoe: 0x581c87 },
@@ -793,7 +793,7 @@
             const barkDark = new THREE.MeshStandardMaterial({ color: 0x4a2c17, roughness: 0.95 });
             const woodCut = new THREE.MeshStandardMaterial({ color: 0xc19a6b, roughness: 0.8 });
             const dark = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.6 });
-            const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+            const cream = new THREE.MeshStandardMaterial({ color: 0xe7dfc9, roughness: 0.55 });
 
             // Main log trunk body
             const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.58, 2.0, 16), bark);
@@ -814,7 +814,7 @@
 
             // Carved face
             [-0.2, 0.2].forEach(sx => {
-                const eyeW = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), white);
+                const eyeW = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 12), cream);
                 eyeW.position.set(sx, 2.02, 0.46); eyeW.scale.set(1, 1, 0.55); body.add(eyeW);
                 const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), dark);
                 pupil.position.set(sx, 2.02, 0.56); body.add(pupil);
@@ -823,7 +823,7 @@
             const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.18, 0.14), dark);
             mouth.position.set(0, 1.72, 0.48); body.add(mouth);
             for (let i = -1; i <= 1; i++) {
-                const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.12, 0.06), white);
+                const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.12, 0.06), cream);
                 tooth.position.set(i * 0.17, 1.77, 0.55); body.add(tooth);
             }
 
@@ -1069,7 +1069,7 @@
 
                 const topper = new THREE.Mesh(
                     new THREE.OctahedronGeometry(0.42, 0),
-                    new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: meta.hex, emissiveIntensity: 0.5 })
+                    new THREE.MeshStandardMaterial({ color: 0xe7dfc9, emissive: meta.hex, emissiveIntensity: 0.4 })
                 );
                 topper.position.y = 1.1;
                 topper.userData = { type: 'kitchen_crate', elementId: pos.id };
@@ -1204,7 +1204,7 @@
             const coatMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.6 });
             const apronMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.6 });
             const darkMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6 });
-            const hatMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 });
+            const hatMat = new THREE.MeshStandardMaterial({ color: 0xd8d5cc, roughness: 0.88 });
             const shoeMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
             chefMaterials = { skin: skinMat, coat: coatMat, apron: apronMat, hat: hatMat, dark: darkMat, shoe: shoeMat };
 
@@ -2724,7 +2724,7 @@
             aimBackdrop.add(sunGlow);
 
             // Clouds
-            const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const cloudMat = new THREE.MeshBasicMaterial({ color: 0xe7e5e4 });
             for (let i = 0; i < 5; i++) {
                 const cloud = new THREE.Group();
                 const puffCount = 3 + (i % 3);
@@ -3271,7 +3271,7 @@
             // Spinning tech ring
             const ring = new THREE.Mesh(
                 new THREE.TorusGeometry(0.92, 0.05, 8, 40),
-                new THREE.MeshStandardMaterial({ color: 0xffffff, emissive, emissiveIntensity: 1.0, metalness: 0.3, roughness: 0.2 })
+                new THREE.MeshStandardMaterial({ color: 0xe7dfc9, emissive, emissiveIntensity: 0.9, metalness: 0.25, roughness: 0.25 })
             );
             ring.rotation.x = Math.PI / 2;
             ring.position.y = 0.7;
