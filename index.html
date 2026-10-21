@@ -1117,6 +1117,229 @@
     <script src="src/game.js?v=92"></script>
     <script src="src/landing.js?v=65"></script>
     <script src="src/admin.js?v=3"></script>
+    <script src="src/game.js?v=32"></script>
+
+    <!-- MOBILE TOUCH CONTROLS -->
+    <div id="mobile-controls" class="mobile-controls">
+        <!-- Left joystick for movement -->
+        <div id="joystick-zone" class="joystick-zone">
+            <div id="joystick-base" class="joystick-base">
+                <div id="joystick-knob" class="joystick-knob"></div>
+            </div>
+        </div>
+        
+        <!-- Right side action buttons -->
+        <div class="mobile-actions">
+            <button id="mobile-interact-btn" class="mobile-btn mobile-interact" title="Interactuar (E)">
+                <i class="fa-solid fa-hand"></i>
+            </button>
+            <button id="mobile-deliver-btn" class="mobile-btn mobile-deliver" title="Entregar (Espacio)">
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button id="mobile-menu-btn" class="mobile-btn mobile-menu" onclick="backToMenu()" title="Menú">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 30;
+            touch-action: none;
+        }
+        
+        @media (max-width: 900px), (hover: none) and (pointer: coarse) {
+            .mobile-controls {
+                display: block;
+            }
+        }
+        
+        .joystick-zone {
+            position: absolute;
+            left: 1rem;
+            bottom: 5rem;
+            width: 120px;
+            height: 120px;
+            pointer-events: auto;
+            touch-action: none;
+        }
+        
+        .joystick-base {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.7) 100%);
+            border: 3px solid rgba(148, 163, 184, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .joystick-knob {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #f59e0b 0%, #d97706 100%);
+            border: 2px solid #fbbf24;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6);
+            transition: transform 0.1s ease;
+        }
+        
+        .mobile-actions {
+            position: absolute;
+            right: 1rem;
+            bottom: 5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            pointer-events: auto;
+            align-items: flex-end;
+        }
+        
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            transition: transform 0.1s ease;
+            touch-action: manipulation;
+        }
+        
+        .mobile-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .mobile-interact {
+            background: rgba(245, 158, 11, 0.95);
+            border-color: #fbbf24;
+            color: #0f172a;
+        }
+        
+        .mobile-deliver {
+            background: rgba(16, 185, 129, 0.95);
+            border-color: #34d399;
+            color: #0f172a;
+            display: none;
+        }
+        
+        .mobile-menu {
+            background: rgba(100, 116, 139, 0.95);
+            border-color: #94a3b8;
+            color: #e2e8f0;
+        }
+        
+        body.mode-overcooked .mobile-deliver {
+            display: flex;
+        }
+        
+        body.mode-aim .mobile-interact {
+            background: rgba(244, 63, 94, 0.95);
+            border-color: #fb7185;
+            color: white;
+        }
+        
+        body.mode-millonario .mobile-interact,
+        body.mode-duelo .mobile-interact,
+        body.mode-connect .mobile-interact {
+            display: none;
+        }
+    </style>
+
+    <script>
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            document.documentElement.classList.add('is-mobile');
+            const joystickZone = document.getElementById('joystick-zone');
+            const joystickKnob = document.getElementById('joystick-knob');
+            const interactBtn = document.getElementById('mobile-interact-btn');
+            const deliverBtn = document.getElementById('mobile-deliver-btn');
+            
+            let joystickActive = false;
+            let joystickStartX = 0, joystickStartY = 0;
+            let joystickCurrentX = 0, joystickCurrentY = 0;
+            const joystickRadius = 40;
+            
+            if (joystickZone) {
+                joystickZone.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    joystickActive = true;
+                    const rect = joystickZone.getBoundingClientRect();
+                    joystickStartX = rect.left + rect.width / 2;
+                    joystickStartY = rect.top + rect.height / 2;
+                }, { passive: false });
+                
+                document.addEventListener('touchmove', (e) => {
+                    if (!joystickActive) return;
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    joystickCurrentX = touch.clientX - joystickStartX;
+                    joystickCurrentY = touch.clientY - joystickStartY;
+                    
+                    const distance = Math.sqrt(joystickCurrentX * joystickCurrentX + joystickCurrentY * joystickCurrentY);
+                    if (distance > joystickRadius) {
+                        joystickCurrentX = (joystickCurrentX / distance) * joystickRadius;
+                        joystickCurrentY = (joystickCurrentY / distance) * joystickRadius;
+                    }
+                    
+                    if (joystickKnob) {
+                        joystickKnob.style.transform = `translate(${joystickCurrentX}px, ${joystickCurrentY}px)`;
+                    }
+                    
+                    const deadzone = 10;
+                    if (window.chefKeys) {
+                        window.chefKeys.w = joystickCurrentY < -deadzone;
+                        window.chefKeys.s = joystickCurrentY > deadzone;
+                        window.chefKeys.a = joystickCurrentX < -deadzone;
+                        window.chefKeys.d = joystickCurrentX > deadzone;
+                    }
+                }, { passive: false });
+                
+                document.addEventListener('touchend', (e) => {
+                    if (!joystickActive) return;
+                    joystickActive = false;
+                    if (joystickKnob) joystickKnob.style.transform = 'translate(0px, 0px)';
+                    if (window.chefKeys) {
+                        window.chefKeys.w = false;
+                        window.chefKeys.s = false;
+                        window.chefKeys.a = false;
+                        window.chefKeys.d = false;
+                    }
+                });
+            }
+            
+            if (interactBtn) {
+                interactBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (window.currentMode === 'overcooked' && typeof interactWithNearestStation === 'function') {
+                        interactWithNearestStation();
+                    } else if (window.currentMode === 'hub' && typeof interactHubStation === 'function') {
+                        interactHubStation();
+                    }
+                }, { passive: false });
+            }
+            
+            if (deliverBtn) {
+                deliverBtn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (window.currentMode === 'overcooked' && typeof deliverKitchenOrder === 'function') {
+                        deliverKitchenOrder();
+                    }
+                }, { passive: false });
+            }
+        }
+    </script>
 
     <!-- OFFLINE / PWA: registra el service worker para jugar sin conexion -->
     <script>
