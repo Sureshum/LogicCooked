@@ -40,18 +40,18 @@
 
     // ---- Brillo del juego ----
     function applyBrightness(v) {
-        const val = Math.min(150, Math.max(40, Number(v) || 100));
+        const val = Math.min(150, Math.max(0, Number(v) || 100));
         document.documentElement.style.setProperty('--game-brightness', (val / 100).toFixed(3));
-        document.documentElement.style.setProperty('--hub-brightness', (Math.min(val, 95) / 100).toFixed(3));
+        document.documentElement.style.setProperty('--hub-brightness', (val / 100).toFixed(3));
         save(BRIGHTNESS_KEY, String(val));
         return val;
     }
 
     // ---- Saturación del juego ----
     function applySaturation(v) {
-        const val = Math.min(150, Math.max(40, Number(v) || 100));
+        const val = Math.min(150, Math.max(0, Number(v) || 100));
         document.documentElement.style.setProperty('--game-saturation', (val / 100).toFixed(3));
-        document.documentElement.style.setProperty('--hub-saturation', (Math.min(val, 95) / 100).toFixed(3));
+        document.documentElement.style.setProperty('--hub-saturation', (val / 100).toFixed(3));
         save(SATURATION_KEY, String(val));
         return val;
     }
@@ -74,8 +74,8 @@
     const musicEnabled = load(MUSIC_ENABLED_KEY, '1') === '1';
     const sfxEnabled = load(SFX_ENABLED_KEY, '1') === '1';
     const musicVol = Math.min(30, Math.max(0, parseInt(load(MUSIC_VOL_KEY, '5'), 10) || 5));
-    const brightness = Math.min(150, Math.max(40, parseInt(load(BRIGHTNESS_KEY, '100'), 10) || 100));
-    const saturation = Math.min(150, Math.max(40, parseInt(load(SATURATION_KEY, '100'), 10) || 100));
+    const brightness = Math.min(150, Math.max(0, parseInt(load(BRIGHTNESS_KEY, '100'), 10) || 100));
+    const saturation = Math.min(150, Math.max(0, parseInt(load(SATURATION_KEY, '100'), 10) || 100));
     const uiSize = load(UISIZE_KEY, 'small');
     applyBrightness(brightness);
     applySaturation(saturation);
@@ -108,13 +108,13 @@
     const bLblInit = document.getElementById('admin-brightness-label');
     const sLblInit = document.getElementById('admin-saturation-label');
     if (bElInit) {
-        bElInit.min = '40';
+        bElInit.min = '0';
         bElInit.max = '150';
         bElInit.step = '1';
         bElInit.value = String(brightness);
     }
     if (sElInit) {
-        sElInit.min = '40';
+        sElInit.min = '0';
         sElInit.max = '150';
         sElInit.step = '1';
         sElInit.value = String(saturation);
@@ -126,17 +126,17 @@
         const bEl = document.getElementById('admin-brightness');
         const sEl = document.getElementById('admin-saturation');
         if (bEl) {
-            bEl.min = '40';
+            bEl.min = '0';
             bEl.max = '150';
             bEl.step = '1';
         }
         if (sEl) {
-            sEl.min = '40';
+            sEl.min = '0';
             sEl.max = '150';
             sEl.step = '1';
         }
-        const b = Math.min(150, Math.max(40, parseInt(bEl?.value, 10) || 100));
-        const s = Math.min(150, Math.max(40, parseInt(sEl?.value, 10) || 100));
+        const b = Math.min(150, Math.max(0, parseInt(bEl?.value, 10) || 100));
+        const s = Math.min(150, Math.max(0, parseInt(sEl?.value, 10) || 100));
         if (bEl && String(bEl.value) !== String(b)) bEl.value = String(b);
         if (sEl && String(sEl.value) !== String(s)) sEl.value = String(s);
         const bLbl = document.getElementById('admin-brightness-label');
@@ -215,12 +215,13 @@
     // ---- Brillo del juego ----
     const brightnessSliderEl = document.getElementById('admin-brightness');
     if (brightnessSliderEl) {
-        brightnessSliderEl.min = '40';
+        brightnessSliderEl.min = '0';
         brightnessSliderEl.max = '150';
         brightnessSliderEl.step = '1';
         const handleB = () => {
-            const v = applyBrightness(brightnessSliderEl.value);
+            applyBrightness(brightnessSliderEl.value);
             const lbl = document.getElementById('admin-brightness-label');
+            const v = Math.min(150, Math.max(0, parseInt(brightnessSliderEl.value, 10) || 100));
             if (lbl) lbl.textContent = String(v) + '%';
             updateColorPreview();
         };
@@ -231,12 +232,13 @@
     // ---- Saturación del juego ----
     const saturationSliderEl = document.getElementById('admin-saturation');
     if (saturationSliderEl) {
-        saturationSliderEl.min = '40';
+        saturationSliderEl.min = '0';
         saturationSliderEl.max = '150';
         saturationSliderEl.step = '1';
         const handleS = () => {
-            const v = applySaturation(saturationSliderEl.value);
+            applySaturation(saturationSliderEl.value);
             const lbl = document.getElementById('admin-saturation-label');
+            const v = Math.min(150, Math.max(0, parseInt(saturationSliderEl.value, 10) || 100));
             if (lbl) lbl.textContent = String(v) + '%';
             updateColorPreview();
         };
