@@ -42,7 +42,7 @@
         }
 
         body.mode-hub #webgl-container canvas {
-            filter: brightness(calc(var(--game-brightness, 1) * var(--hub-brightness, 0.7) * 0.98)) saturate(calc(var(--game-saturation, 1) * 0.62 * var(--hub-saturation, 0.85))) contrast(0.96) hue-rotate(-1deg);
+            filter: brightness(calc(var(--game-brightness, 1) * var(--hub-brightness, 0.7) * 0.98)) saturate(calc(var(--game-saturation, 1) * 0.6 * var(--hub-saturation, 0.85))) contrast(0.95) hue-rotate(-1deg);
         }
 
         #labels-container {
