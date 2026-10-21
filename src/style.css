@@ -37,12 +37,12 @@
 
         /* Patio (modo hub): la escena 3D se ve demasiado saturada */
         #webgl-container canvas {
-            filter: brightness(calc(var(--game-brightness, 1) * 0.98)) saturate(calc(var(--game-saturation, 1) * 0.82)) contrast(0.96);
+            filter: brightness(calc(var(--game-brightness, 1) * 0.98)) saturate(calc(var(--game-saturation, 1) * 0.68)) contrast(0.95) hue-rotate(-2deg);
             transition: filter 0.4s ease;
         }
 
         body.mode-hub #webgl-container canvas {
-            filter: brightness(calc(var(--game-brightness, 1) * var(--hub-brightness, 0.7) * 0.98)) saturate(calc(var(--game-saturation, 1) * 0.75 * var(--hub-saturation, 0.85))) contrast(0.98);
+            filter: brightness(calc(var(--game-brightness, 1) * var(--hub-brightness, 0.7) * 0.98)) saturate(calc(var(--game-saturation, 1) * 0.62 * var(--hub-saturation, 0.85))) contrast(0.96) hue-rotate(-1deg);
         }
 
         #labels-container {
