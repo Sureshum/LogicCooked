@@ -107,16 +107,38 @@
     const sElInit = document.getElementById('admin-saturation');
     const bLblInit = document.getElementById('admin-brightness-label');
     const sLblInit = document.getElementById('admin-saturation-label');
-    if (bElInit) bElInit.value = String(brightness);
-    if (sElInit) sElInit.value = String(saturation);
+    if (bElInit) {
+        bElInit.min = '40';
+        bElInit.max = '150';
+        bElInit.step = '1';
+        bElInit.value = String(brightness);
+    }
+    if (sElInit) {
+        sElInit.min = '40';
+        sElInit.max = '150';
+        sElInit.step = '1';
+        sElInit.value = String(saturation);
+    }
     if (bLblInit) bLblInit.textContent = String(brightness) + '%';
     if (sLblInit) sLblInit.textContent = String(saturation) + '%';
 
     function updateColorPreview() {
         const bEl = document.getElementById('admin-brightness');
         const sEl = document.getElementById('admin-saturation');
+        if (bEl) {
+            bEl.min = '40';
+            bEl.max = '150';
+            bEl.step = '1';
+        }
+        if (sEl) {
+            sEl.min = '40';
+            sEl.max = '150';
+            sEl.step = '1';
+        }
         const b = Math.min(150, Math.max(40, parseInt(bEl?.value, 10) || 100));
         const s = Math.min(150, Math.max(40, parseInt(sEl?.value, 10) || 100));
+        if (bEl && String(bEl.value) !== String(b)) bEl.value = String(b);
+        if (sEl && String(sEl.value) !== String(s)) sEl.value = String(s);
         const bLbl = document.getElementById('admin-brightness-label');
         const sLbl = document.getElementById('admin-saturation-label');
         if (bLbl) bLbl.textContent = String(b) + '%';
@@ -125,6 +147,8 @@
             colorPreview.style.filter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
             colorPreview.style.webkitFilter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
         }
+        applyBrightness(b);
+        applySaturation(s);
     }
     updateColorPreview();
 
@@ -191,23 +215,33 @@
     // ---- Brillo del juego ----
     const brightnessSliderEl = document.getElementById('admin-brightness');
     if (brightnessSliderEl) {
-        brightnessSliderEl.addEventListener('input', updateColorPreview, { passive: true });
-        brightnessSliderEl.addEventListener('change', updateColorPreview);
-        brightnessSliderEl.oninput = () => {
+        brightnessSliderEl.min = '40';
+        brightnessSliderEl.max = '150';
+        brightnessSliderEl.step = '1';
+        const handleB = () => {
             const v = applyBrightness(brightnessSliderEl.value);
+            const lbl = document.getElementById('admin-brightness-label');
+            if (lbl) lbl.textContent = String(v) + '%';
             updateColorPreview();
         };
+        brightnessSliderEl.addEventListener('input', handleB, { passive: true });
+        brightnessSliderEl.addEventListener('change', handleB);
     }
 
     // ---- Saturación del juego ----
     const saturationSliderEl = document.getElementById('admin-saturation');
     if (saturationSliderEl) {
-        saturationSliderEl.addEventListener('input', updateColorPreview, { passive: true });
-        saturationSliderEl.addEventListener('change', updateColorPreview);
-        saturationSliderEl.oninput = () => {
+        saturationSliderEl.min = '40';
+        saturationSliderEl.max = '150';
+        saturationSliderEl.step = '1';
+        const handleS = () => {
             const v = applySaturation(saturationSliderEl.value);
+            const lbl = document.getElementById('admin-saturation-label');
+            if (lbl) lbl.textContent = String(v) + '%';
             updateColorPreview();
         };
+        saturationSliderEl.addEventListener('input', handleS, { passive: true });
+        saturationSliderEl.addEventListener('change', handleS);
     }
 
     // ---- Tamano de la UI ----
