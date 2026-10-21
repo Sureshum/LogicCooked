@@ -5,6 +5,7 @@
     const SFX_ENABLED_KEY = 'LogicCooked3D_AdminSFX';
     const MUSIC_VOL_KEY = 'LogicCooked3D_AdminMusicVol';
     const BRIGHTNESS_KEY = 'LogicCooked3D_AdminBrightness';
+    const SATURATION_KEY = 'LogicCooked3D_AdminSaturation';
     const UISIZE_KEY = 'LogicCooked3D_AdminUISize';
     const THEMES = ['default', 'violeta', 'bosque', 'rosa', 'magma', 'oceano'];
 
@@ -37,10 +38,22 @@
         });
     }
 
-    // ---- Brillo del patio ----
+    // ---- Brillo del juego ----
     function applyBrightness(v) {
-        document.documentElement.style.setProperty('--hub-brightness', String(v / 100));
-        save(BRIGHTNESS_KEY, String(v));
+        const val = Math.min(150, Math.max(40, Number(v) || 100));
+        document.documentElement.style.setProperty('--game-brightness', (val / 100).toFixed(3));
+        document.documentElement.style.setProperty('--hub-brightness', (Math.min(val, 95) / 100).toFixed(3));
+        save(BRIGHTNESS_KEY, String(val));
+        return val;
+    }
+
+    // ---- Saturación del juego ----
+    function applySaturation(v) {
+        const val = Math.min(150, Math.max(40, Number(v) || 100));
+        document.documentElement.style.setProperty('--game-saturation', (val / 100).toFixed(3));
+        document.documentElement.style.setProperty('--hub-saturation', (Math.min(val, 95) / 100).toFixed(3));
+        save(SATURATION_KEY, String(val));
+        return val;
     }
 
     // ---- Tamano de la UI ----
@@ -61,9 +74,11 @@
     const musicEnabled = load(MUSIC_ENABLED_KEY, '1') === '1';
     const sfxEnabled = load(SFX_ENABLED_KEY, '1') === '1';
     const musicVol = Math.min(30, Math.max(0, parseInt(load(MUSIC_VOL_KEY, '5'), 10) || 5));
-    const brightness = Math.min(100, Math.max(30, parseInt(load(BRIGHTNESS_KEY, '70'), 10) || 70));
+    const brightness = Math.min(150, Math.max(40, parseInt(load(BRIGHTNESS_KEY, '100'), 10) || 100));
+    const saturation = Math.min(150, Math.max(40, parseInt(load(SATURATION_KEY, '100'), 10) || 100));
     const uiSize = load(UISIZE_KEY, 'small');
     applyBrightness(brightness);
+    applySaturation(saturation);
     applyUISize(uiSize);
 
     if (typeof bgMusic !== 'undefined') {
@@ -79,17 +94,31 @@
     const volLabel = document.getElementById('admin-music-volume-label');
     const brightnessSlider = document.getElementById('admin-brightness');
     const brightnessLabel = document.getElementById('admin-brightness-label');
+    const saturationSlider = document.getElementById('admin-saturation');
+    const saturationLabel = document.getElementById('admin-saturation-label');
+    const colorPreview = document.getElementById('color-preview');
 
     if (musicToggle) musicToggle.checked = musicEnabled;
     if (sfxToggle) sfxToggle.checked = sfxEnabled;
     if (volSlider) volSlider.value = String(musicVol);
     if (volLabel) volLabel.textContent = String(musicVol);
     if (brightnessSlider) brightnessSlider.value = String(brightness);
-    if (brightnessLabel) brightnessLabel.textContent = String(brightness);
+    if (brightnessLabel) brightnessLabel.textContent = String(brightness) + '%';
+    if (saturationSlider) saturationSlider.value = String(saturation);
+    if (saturationLabel) saturationLabel.textContent = String(saturation) + '%';
+
+    function updateColorPreview() {
+        if (!colorPreview) return;
+        const b = Math.min(150, Math.max(40, parseInt(brightnessSlider ? brightnessSlider.value : brightness, 10) || 100));
+        const s = Math.min(150, Math.max(40, parseInt(saturationSlider ? saturationSlider.value : saturation, 10) || 100));
+        colorPreview.style.filter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
+    }
+    updateColorPreview();
 
     // ---- Abrir / cerrar ----
     function openPanel() {
         panel.classList.remove('hidden');
+        updateColorPreview();
     }
     function closePanel() {
         panel.classList.add('hidden');
@@ -146,12 +175,21 @@
         });
     }
 
-    // ---- Brillo del patio ----
+    // ---- Brillo del juego ----
     if (brightnessSlider) {
         brightnessSlider.addEventListener('input', () => {
-            const v = Math.min(100, Math.max(30, parseInt(brightnessSlider.value, 10) || 70));
-            if (brightnessLabel) brightnessLabel.textContent = String(v);
-            applyBrightness(v);
+            const v = applyBrightness(brightnessSlider.value);
+            if (brightnessLabel) brightnessLabel.textContent = String(v) + '%';
+            updateColorPreview();
+        });
+    }
+
+    // ---- Saturación del juego ----
+    if (saturationSlider) {
+        saturationSlider.addEventListener('input', () => {
+            const v = applySaturation(saturationSlider.value);
+            if (saturationLabel) saturationLabel.textContent = String(v) + '%';
+            updateColorPreview();
         });
     }
 
