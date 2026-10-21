@@ -450,6 +450,7 @@
         const hubAnimated = []; // { update(elapsed, dt) } animated hub props
 
         let currentMode = 'overcooked';
+        Object.defineProperty(window, 'currentMode', { get: function () { return currentMode; } });
         const camTargetPos = new THREE.Vector3(0, 14.5, 14.2);
         const camLookAtPos = new THREE.Vector3(0, 0.2, 0.4);
         const currentLookAt = new THREE.Vector3(0, 0.2, 0.4);
@@ -509,6 +510,24 @@
         let chefParts = null;
         let chefWalkPhase = 0;
         const chefKeys = { w: false, a: false, s: false, d: false };
+        window.chefKeys = chefKeys;
+        // Input analogico del joystick movil (x: -1..1 derecha, y: -1..1 abajo)
+        window.mobileMove = { x: 0, y: 0 };
+        const MOBILE_DEADZONE = 0.3;
+        function mobileInputActive() {
+            const mv = window.mobileMove;
+            return !!(mv && (Math.abs(mv.x) > MOBILE_DEADZONE || Math.abs(mv.y) > MOBILE_DEADZONE));
+        }
+        function readChefInput() {
+            let x = (chefKeys.d ? 1 : 0) - (chefKeys.a ? 1 : 0);
+            let z = (chefKeys.s ? 1 : 0) - (chefKeys.w ? 1 : 0);
+            const mv = window.mobileMove;
+            if (mv) {
+                if (Math.abs(mv.x) > MOBILE_DEADZONE) x = mv.x > 0 ? 1 : -1;
+                if (Math.abs(mv.y) > MOBILE_DEADZONE) z = mv.y > 0 ? 1 : -1;
+            }
+            return { x: x, z: z };
+        }
         const kitchenCrates = [];
         const interactableStations = [];
         let nearestStation = null;
@@ -1413,15 +1432,22 @@
             awaitingStart = true;
             const txt = document.getElementById('start-hint-text');
             const icon = document.getElementById('start-hint-icon');
+            const isTouchUI = document.documentElement.classList.contains('is-mobile');
             if (txt) {
-                txt.textContent = currentMode === 'overcooked'
-                    ? 'Presiona cualquier tecla para comenzar'
-                    : 'Haz clic para comenzar';
+                if (isTouchUI) {
+                    txt.textContent = 'Toca la pantalla para comenzar';
+                } else {
+                    txt.textContent = currentMode === 'overcooked'
+                        ? 'Presiona cualquier tecla para comenzar'
+                        : 'Haz clic para comenzar';
+                }
             }
             if (icon) {
-                icon.className = currentMode === 'overcooked'
-                    ? 'fa-solid fa-keyboard text-amber-300 text-4xl animate-bounce'
-                    : 'fa-solid fa-computer-mouse text-amber-300 text-4xl animate-bounce';
+                icon.className = isTouchUI
+                    ? 'fa-solid fa-hand-pointer text-amber-300 text-4xl animate-bounce'
+                    : (currentMode === 'overcooked'
+                        ? 'fa-solid fa-keyboard text-amber-300 text-4xl animate-bounce'
+                        : 'fa-solid fa-computer-mouse text-amber-300 text-4xl animate-bounce');
             }
             showStartHint();
         }
@@ -2170,15 +2196,16 @@
         function updateChefMovement(dt, elapsed) {
             // Durante el baile Gangnam Style el chef se queda quieto, pero moverse lo cancela
             if (gangnamTimer > 0) {
-                if (chefKeys.w || chefKeys.a || chefKeys.s || chefKeys.d) {
+                if (chefKeys.w || chefKeys.a || chefKeys.s || chefKeys.d || mobileInputActive()) {
                     gangnamTimer = 0;
                 } else {
                     chefVel.set(0, 0, 0);
                     return;
                 }
             }
-            const inputX = (chefKeys.d ? 1 : 0) - (chefKeys.a ? 1 : 0);
-            const inputZ = (chefKeys.s ? 1 : 0) - (chefKeys.w ? 1 : 0);
+            const moveIn = readChefInput();
+            const inputX = moveIn.x;
+            const inputZ = moveIn.z;
             const hasInput = (inputX !== 0 || inputZ !== 0);
 
             let dirX = inputX, dirZ = inputZ;
@@ -6112,15 +6139,16 @@
 
         function updateHubMovement(dt, elapsed) {
             if (gangnamTimer > 0) {
-                if (chefKeys.w || chefKeys.a || chefKeys.s || chefKeys.d) {
+                if (chefKeys.w || chefKeys.a || chefKeys.s || chefKeys.d || mobileInputActive()) {
                     gangnamTimer = 0;
                 } else {
                     chefVel.set(0, 0, 0);
                     return;
                 }
             }
-            const inputX = (chefKeys.d ? 1 : 0) - (chefKeys.a ? 1 : 0);
-            const inputZ = (chefKeys.s ? 1 : 0) - (chefKeys.w ? 1 : 0);
+            const moveIn = readChefInput();
+            const inputX = moveIn.x;
+            const inputZ = moveIn.z;
             let dirX = inputX, dirZ = inputZ;
             const dirLen = Math.hypot(dirX, dirZ);
             if (dirLen > 0.001) { dirX /= dirLen; dirZ /= dirLen; }
@@ -6172,7 +6200,11 @@
             if (prompt && promptText) {
                 if (hubNearStation && hubNearStation.type !== 'skin') {
                     const label = hubNearStation.type === 'npc' ? ('Hablar con ' + hubNearStation.labelText) : ('Entrar a ' + hubNearStation.labelText);
-                    promptText.innerHTML = '<kbd class="px-1.5 py-0.5 bg-lime-500 text-slate-950 rounded font-extrabold">E</kbd> ' + label;
+                    const touchHint = document.documentElement.classList.contains('is-mobile');
+                    const keyHtml = touchHint
+                        ? '<i class="fa-solid fa-hand"></i>'
+                        : '<kbd class="px-1.5 py-0.5 bg-lime-500 text-slate-950 rounded font-extrabold">E</kbd>';
+                    promptText.innerHTML = keyHtml + ' ' + label;
                     prompt.classList.remove('hidden'); prompt.classList.add('flex');
                 } else {
                     prompt.classList.add('hidden'); prompt.classList.remove('flex');
@@ -6563,10 +6595,10 @@
                 refreshDuelReady();
             }
             const k = e.key.toLowerCase();
-            if (k === 'w' || e.key === 'ArrowUp') chefKeys.w = true;
-            if (k === 's' || e.key === 'ArrowDown') chefKeys.s = true;
-            if (k === 'a' || e.key === 'ArrowLeft') chefKeys.a = true;
-            if (k === 'd' || e.key === 'ArrowRight') chefKeys.d = true;
+            if (k === 'w' || e.key === 'ArrowUp') { chefKeys.w = true; if (window.chefKeys) window.chefKeys.w = true; }
+            if (k === 's' || e.key === 'ArrowDown') { chefKeys.s = true; if (window.chefKeys) window.chefKeys.s = true; }
+            if (k === 'a' || e.key === 'ArrowLeft') { chefKeys.a = true; if (window.chefKeys) window.chefKeys.a = true; }
+            if (k === 'd' || e.key === 'ArrowRight') { chefKeys.d = true; if (window.chefKeys) window.chefKeys.d = true; }
             if (k === 'e' && currentMode === 'overcooked') {
                 e.preventDefault();
                 interactWithNearestStation();
