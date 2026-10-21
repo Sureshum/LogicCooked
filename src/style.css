@@ -1511,15 +1511,16 @@
             height: 3.25rem;
             border-radius: 0.35rem;
             overflow: hidden;
-            border: 2px solid rgba(148, 163, 184, 0.35);
+            border: 2px solid rgba(148, 163, 184, 0.5);
             background: radial-gradient(ellipse at 50% 20%,
-                    rgba(255, 255, 255, 0.25) 0%,
-                    rgba(15, 23, 42, 0.9) 70%),
+                    rgba(255, 255, 255, 0.35) 0%,
+                    rgba(15, 23, 42, 0.95) 70%),
                 linear-gradient(135deg, #f59e0b 0%, #38bdf8 60%, #22c55e 100%);
-            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.45);
-            transition: filter 0.15s ease;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.6);
+            transition: none;
             filter: brightness(1) saturate(1);
             transform: translateZ(0);
+            will-change: filter;
         }
 
         .color-preview-box::after {

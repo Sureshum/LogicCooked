@@ -102,22 +102,29 @@
     if (sfxToggle) sfxToggle.checked = sfxEnabled;
     if (volSlider) volSlider.value = String(musicVol);
     if (volLabel) volLabel.textContent = String(musicVol);
-    const bInit = document.getElementById('admin-brightness') || brightnessSlider;
-    const sInit = document.getElementById('admin-saturation') || saturationSlider;
-    const bLabelInit = document.getElementById('admin-brightness-label') || brightnessLabel;
-    const sLabelInit = document.getElementById('admin-saturation-label') || saturationLabel;
-    if (bInit) bInit.value = String(brightness);
-    if (sInit) sInit.value = String(saturation);
-    if (bLabelInit) bLabelInit.textContent = String(brightness) + '%';
-    if (sLabelInit) sLabelInit.textContent = String(saturation) + '%';
+
+    const bElInit = document.getElementById('admin-brightness');
+    const sElInit = document.getElementById('admin-saturation');
+    const bLblInit = document.getElementById('admin-brightness-label');
+    const sLblInit = document.getElementById('admin-saturation-label');
+    if (bElInit) bElInit.value = String(brightness);
+    if (sElInit) sElInit.value = String(saturation);
+    if (bLblInit) bLblInit.textContent = String(brightness) + '%';
+    if (sLblInit) sLblInit.textContent = String(saturation) + '%';
 
     function updateColorPreview() {
-        if (!colorPreview) return;
         const bEl = document.getElementById('admin-brightness');
         const sEl = document.getElementById('admin-saturation');
         const b = Math.min(150, Math.max(40, parseInt(bEl?.value, 10) || 100));
         const s = Math.min(150, Math.max(40, parseInt(sEl?.value, 10) || 100));
-        colorPreview.style.filter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
+        const bLbl = document.getElementById('admin-brightness-label');
+        const sLbl = document.getElementById('admin-saturation-label');
+        if (bLbl) bLbl.textContent = String(b) + '%';
+        if (sLbl) sLbl.textContent = String(s) + '%';
+        if (colorPreview) {
+            colorPreview.style.filter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
+            colorPreview.style.webkitFilter = `brightness(${(b / 100).toFixed(3)}) saturate(${(s / 100).toFixed(3)})`;
+        }
     }
     updateColorPreview();
 
@@ -183,22 +190,22 @@
 
     // ---- Brillo del juego ----
     const brightnessSliderEl = document.getElementById('admin-brightness');
-    const brightnessLabelEl = document.getElementById('admin-brightness-label');
     if (brightnessSliderEl) {
+        brightnessSliderEl.addEventListener('input', updateColorPreview, { passive: true });
+        brightnessSliderEl.addEventListener('change', updateColorPreview);
         brightnessSliderEl.oninput = () => {
             const v = applyBrightness(brightnessSliderEl.value);
-            if (brightnessLabelEl) brightnessLabelEl.textContent = String(v) + '%';
             updateColorPreview();
         };
     }
 
     // ---- Saturación del juego ----
     const saturationSliderEl = document.getElementById('admin-saturation');
-    const saturationLabelEl = document.getElementById('admin-saturation-label');
     if (saturationSliderEl) {
+        saturationSliderEl.addEventListener('input', updateColorPreview, { passive: true });
+        saturationSliderEl.addEventListener('change', updateColorPreview);
         saturationSliderEl.oninput = () => {
             const v = applySaturation(saturationSliderEl.value);
-            if (saturationLabelEl) saturationLabelEl.textContent = String(v) + '%';
             updateColorPreview();
         };
     }
