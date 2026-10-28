@@ -16,7 +16,7 @@
         let audioCtx = null;
 
         // ---- Música de fondo (YouTube IFrame API, volumen 5%) ----
-        const bgMusic = { player: null, ready: false, started: false, videoId: 'odfBLx170k8', volume: 5, adminMuted: false };
+        const bgMusic = { player: null, audio: null, ready: false, started: false, videoId: 'odfBLx170k8', volume: 0.05, adminMuted: false };
 
         function startBackgroundMusic() {
             bgMusic.started = true;
@@ -24,6 +24,15 @@
         }
 
         function resumeBackgroundMusic() {
+            if (bgMusic.adminMuted) return;
+            if (bgMusic.audio) {
+                try {
+                    bgMusic.audio.volume = bgMusic.volume;
+                    const p = bgMusic.audio.play();
+                    if (p && typeof p.catch === 'function') p.catch(function () {});
+                } catch (e) {}
+                return;
+            }
             if (!bgMusic.player || !bgMusic.ready) return;
             if (!bgMusic.started || !soundEnabled || bgMusic.adminMuted) return;
             try { bgMusic.player.playVideo(); } catch (e) { }
@@ -103,9 +112,19 @@
             document.getElementById('icon-audio').className = soundEnabled
                 ? 'fa-solid fa-volume-high text-xs'
                 : 'fa-solid fa-volume-xmark text-xs text-slate-500';
-            if (bgMusic.player) {
+            if (bgMusic.audio) {
                 try {
-                    if (soundEnabled) resumeBackgroundMusic();
+                    bgMusic.audio.volume = bgMusic.volume;
+                    if (soundEnabled && !bgMusic.adminMuted) {
+                        const p = bgMusic.audio.play();
+                        if (p && typeof p.catch === 'function') p.catch(function () {});
+                    } else {
+                        bgMusic.audio.pause();
+                    }
+                } catch (e) { }
+            } else if (bgMusic.player) {
+                try {
+                    if (soundEnabled && !bgMusic.adminMuted) resumeBackgroundMusic();
                     else bgMusic.player.pauseVideo();
                 } catch (e) { }
             }
@@ -6878,6 +6897,15 @@
                 });
             }
 
+            try {
+                const audioEl = document.getElementById('bg-audio');
+                if (audioEl) {
+                    bgMusic.audio = audioEl;
+                    bgMusic.audio.volume = bgMusic.volume;
+                    bgMusic.ready = true;
+                    try { bgMusic.audio.load(); } catch (e) {}
+                }
+            } catch (e) {}
             if (window.YT && window.YT.Player) {
                 createPlayer();
             } else {
