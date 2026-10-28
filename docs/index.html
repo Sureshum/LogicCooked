@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>LogicCooked 3D! - Arcade de Conjuntos y Lógica Proposicional</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="vendor/icon.svg" type="image/svg+xml">
+    <script src="vendor/tailwind.min.js"></script>
+    <script src="vendor/three.min.js"></script>
+    <link href="vendor/fontawesome/css/all.min.css" rel="stylesheet">
+    <link href="vendor/fonts/fonts.css" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css?v=34">
+
+    <!-- MOVIL: se detecta antes del primer pintado para simplificar la UI -->
+    <script>
+        (function () {
+            try {
+                var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+                var legacyTouch = !window.matchMedia && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+                if (coarse || legacyTouch) document.documentElement.classList.add('is-mobile');
+            } catch (e) { }
+        })();
+    </script>
+
+    <!-- TEMA DE UI GUARDADO: se aplica antes del primer pintado para evitar parpadeo -->
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('LogicCooked3D_UITheme');
+                if (theme && theme !== 'default') document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) { }
+        })();
+    </script>
+</head>
+
+<body class="flex flex-col justify-between h-screen w-screen overflow-hidden">
+
+    <!-- HIDDEN YOUTUBE PLAYER: música de fondo (20%) -->
+    <div id="yt-bg-player" aria-hidden="true"
+        style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;overflow:hidden;"></div>
+
+    <!-- LANDING SCREEN / MENU PRINCIPAL -->
+    <div id="landing-screen" class="landing-screen">
+        <div class="pixel-art-bg cozy-bg">
+            <div class="cozy-sky"></div>
+            <div class="cozy-clouds">
+                <div class="cloud cloud-1"></div>
+                <div class="cloud cloud-2"></div>
+                <div class="cloud cloud-3"></div>
+                <div class="cloud cloud-4"></div>
+            </div>
+            <div class="cozy-mountains">
+                <div class="mountain mtn-1"></div>
+                <div class="mountain mtn-2"></div>
+                <div class="mountain mtn-3"></div>
+                <div class="mountain mtn-back"></div>
+            </div>
+            <div class="cozy-hills"></div>
+            <div class="cozy-grass"></div>
+            <div class="cozy-grass-blades"></div>
+            <div class="campfire">
+                <div class="campfire-logs"></div>
+                <div class="campfire-flame flame-a"></div>
+                <div class="campfire-flame flame-b"></div>
+                <div class="campfire-flame flame-c"></div>
+                <div class="campfire-core"></div>
+                <div class="campfire-embers">
+                    <span class="ember ember-1"></span>
+                    <span class="ember ember-2"></span>
+                    <span class="ember ember-3"></span>
+                    <span class="ember ember-4"></span>
+                    <span class="ember ember-5"></span>
+                </div>
+                <div class="campfire-glow"></div>
+                <div class="campfire-smoke">
+                    <span class="smoke-cloud smoke-1"></span>
+                    <span class="smoke-cloud smoke-2"></span>
+                    <span class="smoke-cloud smoke-3"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CUERPO CELESTE (SOL/LUNA) ARRASTRABLE Y REACTIVO -->
+        <div id="celestial-body" class="celestial-body sun-sprite" style="display:none">
+            <div class="moon-crater crater-1" style="display: none;"></div>
+            <div class="moon-crater crater-2" style="display: none;"></div>
+            <div class="moon-crater crater-3" style="display: none;"></div>
+        </div>
+
+        <div class="landing-content">
+            <h1 class="game-title-landing">LogicCooked 3D</h1>
+            <p class="game-subtitle">
+                ¡Bienvenido al arcade de Conjuntos y Lógica Proposicional! 
+                Explora un patio libre y elige el desafío que quieras jugar.
+            </p>
+            <div id="username-container" class="flex flex-col items-center gap-3 mb-4 animate-[fadeInUp_1s_ease-out_0.9s_both]">
+                <input id="username-input" type="text" maxlength="12" placeholder="Escribe tu nombre"
+                    class="px-4 py-2 rounded-xl bg-slate-950/80 border border-amber-500/40 text-center text-sm font-bold text-white placeholder-slate-400 shadow-inner focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/40 transition w-60"
+                    spellcheck="false" autocomplete="off">
+                <p class="text-[10px] text-slate-400">Tu nombre aparecerá en el Top 10 de cada juego</p>
+            </div>
+            <button id="start-btn" class="start-button" disabled>
+                <i class="fa-solid fa-play mr-2"></i>
+                ENTRAR A ZONA DE JUEGOS
+            </button>
+            <div class="social-buttons">
+                <a href="mailto:ssshum25@gmail.com" class="social-button email" title="Escríbeme: ssshum25@gmail.com">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>Contacto</span>
+                </a>
+                <a href="https://github.com/Sureshum" target="_blank" rel="noopener noreferrer"
+                    class="social-button github" title="Mi perfil de GitHub">
+                    <i class="fa-brands fa-github"></i>
+                    <span>GitHub</span>
+                </a>
+            </div>
+        </div>
+
+        <div id="drag-hint" class="drag-hint" style="display:none">
+            <i class="fa-solid fa-hand-pointer mr-2"></i>
+            Arrastra el Sol/Luna a la izquierda para más sol y a la derecha para más noche
+        </div>
+
+        <!-- BOTON ADMIN (esquina superior derecha del menu) -->
+        <button id="admin-open-btn" class="admin-corner-btn" title="Panel de administración">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Admin</span>
+        </button>
+
+        <!-- PANEL ADMIN -->
+        <div id="admin-panel" class="admin-panel hidden">
+            <div class="glass-panel admin-panel-inner">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-extrabold flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-amber-300"></i> Panel Admin
+                    </h2>
+                    <button id="admin-close-btn" class="admin-icon-btn" title="Cerrar">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- TEMAS DE COLOR -->
+                <div class="admin-section">
+                    <p class="admin-section-title">Color de la interfaz</p>
+                    <div id="admin-theme-grid" class="admin-theme-grid">
+                        <button class="admin-theme-swatch" data-theme="default" title="Original">
+                            <span class="swatch-row">
+                                <i style="background:#11132a"></i><i style="background:#1d2340"></i>
+                                <i style="background:#f5b13d"></i><i style="background:#4fd9ea"></i>
+                            </span>
+                            <span class="swatch-label">Original</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="violeta" title="Violeta">
+                            <span class="swatch-row">
+                                <i style="background:#1a1030"></i><i style="background:#2d1b52"></i>
+                                <i style="background:#c084fc"></i><i style="background:#f0abfc"></i>
+                            </span>
+                            <span class="swatch-label">Violeta</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="bosque" title="Bosque">
+                            <span class="swatch-row">
+                                <i style="background:#0d1f14"></i><i style="background:#163222"></i>
+                                <i style="background:#4ade80"></i><i style="background:#86efac"></i>
+                            </span>
+                            <span class="swatch-label">Bosque</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="rosa" title="Rosa">
+                            <span class="swatch-row">
+                                <i style="background:#2a1020"></i><i style="background:#451a35"></i>
+                                <i style="background:#fb7185"></i><i style="background:#fda4af"></i>
+                            </span>
+                            <span class="swatch-label">Rosa</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="magma" title="Magma">
+                            <span class="swatch-row">
+                                <i style="background:#26100c"></i><i style="background:#421c14"></i>
+                                <i style="background:#fb923c"></i><i style="background:#fca5a5"></i>
+                            </span>
+                            <span class="swatch-label">Magma</span>
+                        </button>
+                        <button class="admin-theme-swatch" data-theme="oceano" title="Océano">
+                            <span class="swatch-row">
+                                <i style="background:#0c1a26"></i><i style="background:#143044"></i>
+                                <i style="background:#fbbf24"></i><i style="background:#38bdf8"></i>
+                            </span>
+                            <span class="swatch-label">Océano</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AJUSTES -->
+                <div class="admin-section">
+                    <p class="admin-section-title">Ajustes</p>
+                    <label class="admin-toggle-row">
+                        <span><i class="fa-solid fa-music mr-1"></i> Música de fondo</span>
+                        <input type="checkbox" id="admin-music-toggle" class="admin-toggle">
+                    </label>
+                    <label class="admin-toggle-row">
+                        <span><i class="fa-solid fa-volume-high mr-1"></i> Efectos de sonido</span>
+                        <input type="checkbox" id="admin-sfx-toggle" class="admin-toggle" checked>
+                    </label>
+                    <div class="admin-slider-row">
+                        <span><i class="fa-solid fa-music mr-1"></i> Volumen música</span>
+                        <input type="range" id="admin-music-volume" min="0" max="30" value="5" class="admin-slider">
+                        <span id="admin-music-volume-label" class="mono-font text-amber-300 text-sm w-8 text-right">5</span>
+                    </div>
+                    <div class="admin-slider-row">
+                        <span><i class="fa-solid fa-sun mr-1"></i> Brillo</span>
+                        <input type="range" id="admin-brightness" min="40" max="140" step="1" value="100" class="admin-slider">
+                        <span id="admin-brightness-label" class="mono-font text-amber-300 text-sm w-10 text-right">100</span>
+                    </div>
+                    <div class="admin-slider-row">
+                        <span><i class="fa-solid fa-droplet mr-1"></i> Saturación</span>
+                        <input type="range" id="admin-saturation" min="40" max="140" step="1" value="100" class="admin-slider">
+                        <span id="admin-saturation-label" class="mono-font text-amber-300 text-sm w-10 text-right">100</span>
+                    </div>
+                    <div class="admin-section">
+                        <div class="admin-section-title">Vista previa (ejemplo)</div>
+                        <div class="color-preview-box" id="color-preview">
+                            <div class="color-preview-label">Ejemplo</div>
+                        </div>
+                    </div>
+                    <div class="admin-slider-row admin-stack-row">
+                        <span><i class="fa-solid fa-expand mr-1"></i> Tamaño de la UI</span>
+                        <div id="admin-size-row" class="admin-size-row">
+                            <button type="button" class="admin-size-btn" data-size="small">Pequeño</button>
+                            <button type="button" class="admin-size-btn" data-size="medium">Mediano</button>
+                            <button type="button" class="admin-size-btn" data-size="large">Grande</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DATOS -->
+                <div class="admin-section">
+                    <p class="admin-section-title">Datos</p>
+                    <button id="admin-clear-scores" class="admin-action-btn danger">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Borrar Top 10 (todos los juegos)
+                    </button>
+                    <button id="admin-reset-all" class="admin-action-btn danger">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Restablecer todo (datos y tema)
+                    </button>
+                </div>
+
+                <p class="admin-footnote">Los ajustes se guardan en este dispositivo.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D WEBGL CANVAS -->
+    <div id="webgl-container"></div>
+
+    <!-- 3D FLOATING LABELS OVERLAY -->
+    <div id="labels-container"></div>
+
+    <!-- CENTER FPS CROSSHAIR -->
+    <div id="fps-crosshair" class="fixed inset-0 pointer-events-none z-15 hidden">
+        <div id="crosshair-reticle" class="absolute w-9 h-9 flex items-center justify-center opacity-85"
+            style="left:50%; top:50%; transform: translate(-50%, -50%)">
+            <div class="absolute w-full h-0.5 bg-rose-400/80"></div>
+            <div class="absolute h-full w-0.5 bg-rose-400/80"></div>
+            <div class="w-3 h-3 rounded-full border-2 border-amber-300"></div>
+        </div>
+    </div>
+
+    <!-- CENTER-SCREEN HIT FEEDBACK (COD-style) -->
+    <div id="hit-feedback" class="fixed inset-0 pointer-events-none z-40 flex items-center justify-center overflow-hidden"></div>
+
+    <!-- ULTRA-COMPACT TOP HUD BAR -->
+    <header class="hud-layer w-full px-3 pt-2 flex flex-col items-center gap-1.5">
+        <div
+            class="max-w-7xl w-full glass-panel rounded-2xl px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shadow-xl">
+            <!-- Brand + Mode Switcher -->
+            <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-2 pr-1">
+                    <div
+                        class="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow">
+                        <i class="fa-solid fa-cube text-slate-950 text-xs"></i>
+                    </div>
+                    <span
+                        class="text-sm font-extrabold tracking-tight bg-gradient-to-r from-amber-300 to-rose-400 bg-clip-text text-transparent hidden sm:inline">
+                        LogicCooked 3D
+                    </span>
+                </div>
+
+                <div
+                    class="hud-interactive flex items-center gap-1 bg-slate-950/85 p-1 rounded-xl border border-slate-800">
+                    <button onclick="switchGameMode('hub')" id="btn-mode-hub"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 bg-lime-500 text-slate-950 shadow">
+                        <i class="fa-solid fa-tree"></i>
+                        <span class="mode-btn-label">0. Patio</span>
+                    </button>
+                    <button onclick="switchGameMode('overcooked')" id="btn-mode-overcooked"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-kitchen-set"></i>
+                        <span class="mode-btn-label">1. Cocina</span>
+                    </button>
+                    <button onclick="switchGameMode('aim')" id="btn-mode-aim"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-crosshairs text-rose-400"></i>
+                        <span class="mode-btn-label">2. Aim 3D</span>
+                    </button>
+                    <button onclick="switchGameMode('connect')" id="btn-mode-connect"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-plug-circle-bolt text-emerald-400"></i>
+                        <span class="mode-btn-label">3. Conecta</span>
+                    </button>
+                    <button onclick="switchGameMode('millonario')" id="btn-mode-millonario"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-sack-dollar text-yellow-300"></i>
+                        <span class="mode-btn-label">4. Millonario</span>
+                    </button>
+                    <button onclick="switchGameMode('duelo')" id="btn-mode-duelo"
+                        class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 text-slate-300 hover:bg-slate-800">
+                        <i class="fa-solid fa-skull-crossbones text-orange-400"></i>
+                        <span class="mode-btn-label">5. Duelo</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Static Mode Indicator -->
+            <div class="mode-indicator flex items-center gap-2 bg-slate-950/95 border border-slate-700/80 rounded-xl px-3.5 py-1">
+                <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Modo Activo:</span>
+                <span id="static-mode-badge"
+                    class="text-xs font-extrabold uppercase tracking-wide text-amber-300 mono-font">
+                    COCINA 3D • CONJUNTOS
+                </span>
+            </div>
+
+            <!-- Right Stats & Modals -->
+            <div class="hud-interactive flex items-center gap-1.5 flex-wrap">
+                <div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-1"
+                    title="Nombre para el Top 10">
+                    <i class="fa-solid fa-user-astronaut text-indigo-400 text-[10px]"></i>
+                    <span id="playerNameDisplay" class="text-[11px] font-bold text-white max-w-[7rem] truncate">Chef3D</span>
+                </div>
+
+                <div
+                    class="flex items-center gap-2 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-0.5 text-xs mono-font">
+                    <span title="Puntuación"><strong id="hud-score" class="text-amber-400">0</strong> <small
+                            class="text-[9px] text-slate-400">pts</small></span>
+                    <span class="text-slate-700">|</span>
+                    <span id="hud-streak" class="text-emerald-400 font-bold" title="Racha">x1</span>
+                    <span class="text-slate-700">|</span>
+                    <span id="hud-timer" class="text-cyan-300 font-bold" title="Tiempo">120s</span>
+                </div>
+
+                <button onclick="toggleLeaderboardDrawer()" id="btn-top10"
+                    class="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-trophy"></i>
+                    <span class="hide-mobile-label">Top 10</span>
+                </button>
+
+                <button onclick="toggleAudio()" id="btn-audio"
+                    class="w-7 h-7 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-amber-400 transition">
+                    <i id="icon-audio" class="fa-solid fa-volume-high text-[11px]"></i>
+                </button>
+
+                <button onclick="backToMenu()" title="Volver al menú"
+                    class="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-bold flex items-center gap-1 transition">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="hide-mobile-label">Menú</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Row 2: Patio Quick Actions -->
+        <div id="hub-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden flex-wrap items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-tree mr-1 text-lime-300"></i>Patio de Juegos</span>
+            <span class="only-desktop-hint text-slate-400">Camina con WASD y pulsa <kbd class="px-1.5 py-0.5 bg-lime-500 text-slate-950 rounded font-extrabold">E</kbd> en una zona para entrar</span>
+            <span class="only-mobile-hint text-slate-400">Mueve el joystick y toca <i class="fa-solid fa-hand"></i> junto a una zona para entrar</span>
+        </div>
+
+        <!-- Row 2: Kitchen Quick Actions -->
+        <div id="kitchen-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 flex flex-wrap items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-gauge-high mr-1 text-amber-300"></i>Dificultad:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setKitchenDifficulty('easy')" id="btn-diff-easy"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-emerald-500 text-slate-950">Fácil</button>
+                <button onclick="setKitchenDifficulty('normal')" id="btn-diff-normal"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Normal</button>
+                <button onclick="setKitchenDifficulty('hard')" id="btn-diff-hard"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-regular fa-clock mr-1 text-cyan-300"></i>Tiempo:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setKitchenRoundTime(60)" id="btn-time-60"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">60s</button>
+                <button onclick="setKitchenRoundTime(120)" id="btn-time-120"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-cyan-500 text-slate-950">120s</button>
+                <button onclick="setKitchenRoundTime(180)" id="btn-time-180"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">180s</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold">Plato en Mesa:</span>
+            <span id="hud-plate-set"
+                class="mono-font font-extrabold text-emerald-400 bg-slate-950 px-2.5 py-0.5 rounded-md border border-slate-800 text-xs">{
+                ∅ }</span>
+            <button onclick="interactWithNearestStation()" id="btn-interact-e"
+                class="px-2.5 py-0.5 rounded-md bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold mono-font text-[11px] transition shadow">
+                [E] Interactuar
+            </button>
+        </div>
+
+        <!-- Row 2 Alternative: Aim Quick Actions -->
+        <div id="aim-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-gauge-high mr-1 text-rose-300"></i>Dificultad:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setAimDifficulty('easy')" id="btn-aim-easy"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-emerald-500 text-slate-950">Fácil</button>
+                <button onclick="setAimDifficulty('normal')" id="btn-aim-normal"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Normal</button>
+                <button onclick="setAimDifficulty('hard')" id="btn-aim-hard"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+            <span class="text-rose-300 font-semibold"><i class="fa-solid fa-crosshairs mr-1"></i> Dispara la respuesta correcta</span>
+        </div>
+
+        <!-- Row 2 Alternative: Connect Quick Actions -->
+        <div id="connect-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-emerald-300 font-semibold"><i class="fa-solid fa-plug-circle-bolt mr-1"></i> Enlaza cada
+                expresión (Izq) con su equivalencia formal (Der)</span>
+            <button onclick="triggerNewChallenge()"
+                class="px-2.5 py-0.5 rounded-md bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-[11px] transition shadow flex items-center gap-1">
+                <i class="fa-solid fa-rotate"></i>
+                <span>Nuevos Nodos</span>
+            </button>
+        </div>
+
+        <!-- Row 2 Alternative: Millonario Quick Actions -->
+        <div id="million-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-gauge-high mr-1 text-yellow-300"></i>Dificultad:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setMillDifficulty('easy')" id="btn-mil-easy"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-emerald-500 text-slate-950">Fácil</button>
+                <button onclick="setMillDifficulty('normal')" id="btn-mil-normal"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Normal</button>
+                <button onclick="setMillDifficulty('hard')" id="btn-mil-hard"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-heart mr-1 text-rose-400"></i>Vidas:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setMillLives(3)" id="btn-mil-lives-3"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-rose-500 text-white">3</button>
+                <button onclick="setMillLives(2)" id="btn-mil-lives-2"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">2</button>
+                <button onclick="setMillLives(1)" id="btn-mil-lives-1"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">1</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-hand-sparkles mr-1 text-yellow-300"></i>Comodines:</span>
+            <button onclick="useMillionFifty()" id="btn-mil-5050"
+                class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition border bg-yellow-500/20 border-yellow-500/50 text-yellow-200 hover:bg-yellow-500/30">
+                50 : 50
+            </button>
+            <button onclick="useMillionPublic()" id="btn-mil-public"
+                class="px-2.5 py-0.5 rounded-md text-[10px] font-extrabold transition border bg-emerald-500/20 border-emerald-500/50 text-emerald-200 hover:bg-emerald-500/30">
+                <i class="fa-solid fa-people-group mr-0.5"></i>Público
+            </button>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300">Mejor:</span>
+            <span id="million-best" class="mono-font font-extrabold text-yellow-300 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">0</span>
+            <span class="text-yellow-200/80 font-semibold"><i class="fa-solid fa-arrow-trend-up mr-1"></i>Escalera hasta el millón</span>
+        </div>
+
+        <!-- Row 2 Alternative: Duelo (VS 2 jugadores) Quick Actions -->
+        <div id="duel-quick-actions"
+            class="hud-interactive glass-panel rounded-full px-4 py-1 hidden items-center justify-center gap-3 text-[11px] shadow-md">
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-gauge-high mr-1 text-orange-300"></i>Dificultad:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setDuelDifficulty('easy')" id="btn-duel-easy"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-emerald-500 text-slate-950">Fácil</button>
+                <button onclick="setDuelDifficulty('normal')" id="btn-duel-normal"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Normal</button>
+                <button onclick="setDuelDifficulty('hard')" id="btn-duel-hard"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">Difícil</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-heart mr-1 text-rose-400"></i>Vidas:</span>
+            <div class="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                <button onclick="setDuelLives(3)" id="btn-duel-lives-3"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition bg-rose-500 text-white">3</button>
+                <button onclick="setDuelLives(2)" id="btn-duel-lives-2"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">2</button>
+                <button onclick="setDuelLives(1)" id="btn-duel-lives-1"
+                    class="px-2.5 py-0.5 rounded-md text-[10px] font-bold transition text-slate-300 hover:bg-slate-800">1</button>
+            </div>
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-300 font-semibold"><i class="fa-solid fa-user-astronaut mr-1 text-sky-300"></i>Jugador 2:</span>
+            <input id="duel-p2-name" type="text" maxlength="12" value="Invitado" spellcheck="false" autocomplete="off"
+                class="w-28 px-2 py-0.5 rounded-md bg-slate-950/90 border border-slate-700 text-[11px] font-bold text-white text-center focus:outline-none focus:border-orange-400">
+            <div class="w-px h-4 bg-slate-700"></div>
+            <span class="text-slate-400">Cilindro:
+                <span id="duel-cylinder-hud" class="mono-font font-extrabold text-orange-300 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">6 / 6</span>
+            </span>
+            <span class="text-orange-200/80 font-semibold"><i class="fa-solid fa-gun mr-1"></i>Pierde = se dispara</span>
+        </div>
+    </header>
+
+    <!-- MILLONARIO: PANEL DE PREGUNTA (IZQUIERDA) -->
+    <aside id="million-panel"
+        class="hud-interactive hidden flex-col gap-2.5 fixed left-4 z-30 glass-panel rounded-2xl border border-yellow-500/30 shadow-2xl">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-2 min-w-0">
+                <i class="fa-solid fa-sack-dollar text-yellow-300 text-lg"></i>
+                <span id="million-category"
+                    class="text-[10px] uppercase tracking-widest font-extrabold text-yellow-300 bg-yellow-500/10 border border-yellow-500/40 rounded-md px-2 py-0.5 truncate">LÓGICA</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px]">
+                <span class="bg-slate-950/90 border border-rose-500/40 rounded-md px-2 py-0.5 flex items-center gap-1"
+                    title="Vidas restantes">
+                    <span id="million-lives" class="flex items-center gap-0.5 text-rose-400 text-[11px]"></span>
+                </span>
+                <span class="text-slate-400 font-bold">Pregunta
+                    <span id="million-rung" class="mono-font text-white font-extrabold">1 / 15</span>
+                </span>
+                <span class="bg-slate-950/90 border border-yellow-500/40 rounded-md px-2 py-0.5">
+                    <span class="text-slate-400 text-[9px] uppercase">Premio:</span>
+                    <span id="million-prize" class="mono-font font-extrabold text-yellow-300">100 pts</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="million-timer-bar" class="h-full bg-amber-400 rounded-full transition-[width] duration-1000 ease-linear"
+                style="width:100%"></div>
+        </div>
+        <div class="flex justify-end -mt-1">
+            <span class="text-[10px] text-slate-400 font-bold">Tiempo:
+                <span id="million-timer-val" class="mono-font text-[11px] font-extrabold tabular-nums text-amber-300">30</span>s
+            </span>
+        </div>
+
+        <div id="million-question"
+            class="bg-slate-950/95 border border-slate-800 rounded-xl px-4 py-4 text-lg sm:text-xl lg:text-2xl text-slate-100 mono-font leading-snug shadow-inner">
+            Cargando pregunta…
+        </div>
+
+        <div id="million-public"
+            class="hidden bg-slate-950/90 border border-slate-800 rounded-xl px-3 py-2.5 space-y-1.5">
+            <p class="text-[9px] uppercase tracking-widest text-slate-400 font-bold mb-1"><i
+                    class="fa-solid fa-people-group mr-1 text-emerald-300"></i>Voto del público</p>
+            <div id="million-public-rows" class="space-y-1.5"></div>
+        </div>
+
+        <div id="million-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button id="million-ans-0" onclick="answerMillion(0)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-0"
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">A</span>
+                <span id="million-ans-text-0" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="million-ans-1" onclick="answerMillion(1)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-1"
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">B</span>
+                <span id="million-ans-text-1" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="million-ans-2" onclick="answerMillion(2)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-2"
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">C</span>
+                <span id="million-ans-text-2" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="million-ans-3" onclick="answerMillion(3)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-yellow-500/40 hover:border-yellow-300 hover:bg-yellow-500/10">
+                <span id="million-ans-letter-3"
+                    class="w-8 h-8 shrink-0 rounded-md bg-yellow-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">D</span>
+                <span id="million-ans-text-3" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+        </div>
+
+        <p id="million-explain" class="hidden text-[11px] leading-snug rounded-xl px-3 py-2 mono-font border"></p>
+    </aside>
+
+    <!-- DUELO VS 2 JUGADORES: PANEL DE PREGUNTA + RULETA RUSA -->
+    <aside id="duel-panel"
+        class="hud-interactive hidden flex-col gap-2.5 fixed left-4 z-30 glass-panel rounded-2xl border border-orange-500/40 shadow-2xl">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-2 min-w-0">
+                <i class="fa-solid fa-skull-crossbones text-orange-300 text-lg"></i>
+                <span id="duel-category"
+                    class="text-[10px] uppercase tracking-widest font-extrabold text-orange-300 bg-orange-500/10 border border-orange-500/40 rounded-md px-2 py-0.5 truncate">LÓGICA</span>
+                <span id="duel-turn"
+                    class="text-[10px] uppercase tracking-widest font-extrabold text-slate-950 bg-orange-400 border border-orange-300 rounded-md px-2 py-0.5 whitespace-nowrap">TURNO: J1</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px]">
+                <span class="bg-slate-950/90 border border-rose-500/40 rounded-md px-2 py-0.5 flex items-center gap-1.5"
+                    title="Vidas de cada jugador">
+                    <span id="duel-p1-tag" class="font-extrabold text-amber-300 max-w-[6.5rem] truncate inline-block align-bottom">J1</span>
+                    <span id="duel-p1-lives" class="flex items-center gap-0.5 text-rose-400 text-[11px]"></span>
+                    <span class="text-slate-600">VS</span>
+                    <span id="duel-p2-tag" class="font-extrabold text-sky-300 max-w-[6.5rem] truncate inline-block align-bottom">J2</span>
+                    <span id="duel-p2-lives" class="flex items-center gap-0.5 text-rose-400 text-[11px]"></span>
+                </span>
+                <span class="bg-slate-950/90 border border-orange-500/40 rounded-md px-2 py-0.5">
+                    <span class="text-slate-400 text-[9px] uppercase">Pts:</span>
+                    <span id="duel-score" class="mono-font font-extrabold text-orange-300">0</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="duel-timer-bar" class="h-full bg-orange-400 rounded-full transition-[width] duration-1000 ease-linear"
+                style="width:100%"></div>
+        </div>
+        <div class="flex justify-between -mt-1">
+            <span class="text-[10px] text-slate-400 font-bold">Tiempo:
+                <span id="duel-timer-val" class="mono-font text-[11px] font-extrabold tabular-nums text-orange-300">22</span>s
+            </span>
+            <span class="text-[10px] text-slate-400 font-bold">Cilindro:
+                <span id="duel-cylinder" class="inline-flex items-center gap-1 align-middle"></span>
+                <span id="duel-chance" class="mono-font text-[11px] font-extrabold text-rose-300 ml-1">17%</span>
+            </span>
+        </div>
+
+        <div id="duel-question"
+            class="bg-slate-950/95 border border-slate-800 rounded-xl px-4 py-4 text-lg sm:text-xl lg:text-2xl text-slate-100 mono-font leading-snug shadow-inner">
+            Cargando pregunta…
+        </div>
+
+        <div id="duel-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button id="duel-ans-0" onclick="answerDuel(0)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-orange-500/40 hover:border-orange-300 hover:bg-orange-500/10">
+                <span id="duel-ans-letter-0"
+                    class="w-8 h-8 shrink-0 rounded-md bg-orange-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">A</span>
+                <span id="duel-ans-text-0" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="duel-ans-1" onclick="answerDuel(1)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-orange-500/40 hover:border-orange-300 hover:bg-orange-500/10">
+                <span id="duel-ans-letter-1"
+                    class="w-8 h-8 shrink-0 rounded-md bg-orange-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">B</span>
+                <span id="duel-ans-text-1" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="duel-ans-2" onclick="answerDuel(2)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-orange-500/40 hover:border-orange-300 hover:bg-orange-500/10">
+                <span id="duel-ans-letter-2"
+                    class="w-8 h-8 shrink-0 rounded-md bg-orange-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">C</span>
+                <span id="duel-ans-text-2" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+            <button id="duel-ans-3" onclick="answerDuel(3)"
+                class="hud-interactive text-left flex items-center gap-3 rounded-xl px-4 py-3.5 transition shadow-lg border-2 bg-slate-950/90 border-orange-500/40 hover:border-orange-300 hover:bg-orange-500/10">
+                <span id="duel-ans-letter-3"
+                    class="w-8 h-8 shrink-0 rounded-md bg-orange-400 text-slate-950 font-extrabold text-sm flex items-center justify-center">D</span>
+                <span id="duel-ans-text-3" class="text-base sm:text-lg text-slate-100 mono-font leading-snug">—</span>
+            </button>
+        </div>
+
+        <!-- RECOMPENSA: el que gana la pregunta elige qué hacer con el revólver -->
+        <div id="duel-power" class="hidden bg-slate-950/95 border-2 border-orange-500/50 rounded-xl px-3 py-2.5 space-y-2">
+            <p class="text-[9px] uppercase tracking-widest text-orange-300 font-extrabold">
+                <i class="fa-solid fa-gun mr-1"></i><span id="duel-power-title">¡Ganaste la pregunta! Elige tu jugada</span>
+            </p>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="duelShoot('rival')" id="btn-duel-shoot-rival"
+                    class="flex-1 min-w-[8rem] px-3 py-2 rounded-lg text-[11px] font-extrabold transition border bg-rose-500/20 border-rose-500/60 text-rose-200 hover:bg-rose-500/30">
+                    <i class="fa-solid fa-crosshairs mr-1"></i>Disparar al rival
+                    <span class="block text-[9px] font-bold text-rose-300/80">Si te da, pierde 1 vida</span>
+                </button>
+                <button onclick="duelShoot('self')" id="btn-duel-shoot-self"
+                    class="flex-1 min-w-[8rem] px-3 py-2 rounded-lg text-[11px] font-extrabold transition border bg-amber-500/20 border-amber-500/60 text-amber-200 hover:bg-amber-500/30">
+                    <i class="fa-solid fa-gun mr-1"></i>Dispararte a ti
+                    <span class="block text-[9px] font-bold text-amber-300/80">Valentía: +100 pts si falla</span>
+                </button>
+                <button onclick="duelShoot('reroll')" id="btn-duel-reroll"
+                    class="flex-1 min-w-[8rem] px-3 py-2 rounded-lg text-[11px] font-extrabold transition border bg-sky-500/20 border-sky-500/60 text-sky-200 hover:bg-sky-500/30">
+                    <i class="fa-solid fa-rotate mr-1"></i>Re-rollear cilindro
+                    <span class="block text-[9px] font-bold text-sky-300/80">Cartucho nuevo: vuelta a 6</span>
+                </button>
+            </div>
+        </div>
+
+        <p id="duel-explain" class="hidden text-[11px] leading-snug rounded-xl px-3 py-2 mono-font border"></p>
+    </aside>
+
+    <!-- DUELO: FLASH DE DISPARO -->
+    <div id="duel-flash" class="fixed inset-0 pointer-events-none z-[45] opacity-0"></div>
+
+    <!-- FLOATING ORDER TICKET AT BOTTOM-RIGHT -->
+    <aside id="mission-ticket-card"
+        class="fixed top-40 right-4 z-30 hud-interactive w-80 sm:w-[27rem] order-ticket-card rounded-2xl overflow-hidden">
+        <div id="ticket-header-strip"
+            class="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i id="ticket-icon" class="fa-solid fa-receipt text-slate-950 text-sm"></i>
+                <span id="mission-tag" class="text-xs font-extrabold uppercase tracking-wider text-slate-950">
+                    COMANDA #01 • CONJUNTOS
+                </span>
+            </div>
+            <button onclick="triggerNewChallenge()"
+                class="text-sm text-slate-950 hover:bg-black/15 px-2.5 py-1 rounded-md font-bold transition flex items-center gap-1"
+                title="Cambiar Orden">
+                <i class="fa-solid fa-rotate"></i>
+                <span class="text-[11px]">Nueva</span>
+            </button>
+        </div>
+
+        <div class="p-4 space-y-2.5">
+            <div class="bg-slate-950/95 border border-slate-800 rounded-xl py-3.5 px-3 text-center shadow-inner">
+                <div class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mb-1"
+                    id="mission-subtitle-label">
+                    PREPARAR OPERACIÓN
+                </div>
+                <div id="mission-title"
+                    class="text-3xl sm:text-4xl font-extrabold text-amber-300 mono-font tracking-tight leading-tight">
+                    A ∪ B
+                </div>
+            </div>
+
+            <div id="mission-context"
+                class="bg-slate-900/90 border border-slate-800/80 rounded-xl px-3 py-2.5 text-sm sm:text-base mono-font flex flex-wrap items-center justify-center gap-2">
+            </div>
+
+            <p id="mission-desc" class="text-xs sm:text-sm text-slate-300 leading-snug">
+                <span class="only-desktop-hint">Camina con WASD y pulsa [E] frente a una estación para tomar ingredientes o entregar.</span>
+                <span class="only-mobile-hint">Mueve el joystick y toca <i class="fa-solid fa-hand"></i> junto a una estación para tomar ingredientes o entregar.</span>
+            </p>
+        </div>
+    </aside>
+
+    <!-- FOOTER CONSOLE (oculto: la validación se muestra en el feedback central) -->
+    <footer class="hud-layer w-full px-3 pb-2 hidden">
+        <div
+            class="max-w-7xl mx-auto glass-panel rounded-2xl px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-2 shadow-xl">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+                <span
+                    class="text-[10px] font-bold uppercase tracking-wider text-indigo-300 shrink-0 hidden sm:inline">Validación:</span>
+                <div id="validation-console"
+                    class="bg-slate-950/90 border border-slate-800/90 rounded-lg px-2.5 py-1 text-[11px] mono-font text-emerald-300 truncate flex-1">
+                    [MOTOR 3D LISTO] Usa WASD + [E] en la Cocina, apunta en Aim 3D o tiende cables lógicos.
+                </div>
+            </div>
+
+            <div class="hud-interactive flex items-center gap-3 text-[11px] shrink-0">
+                <span id="hud-controls-hint" class="text-slate-300 hidden md:inline mono-font">
+                    <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-amber-300">WASD</kbd> Mover •
+                    <kbd class="px-1.5 py-0.5 bg-amber-500 text-slate-950 font-bold rounded">E</kbd> Interactuar •
+                    <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-emerald-300">Espacio</kbd> Entregar
+                </span>
+                <span id="hud-accuracy-stats" class="mono-font text-slate-400">✓ 0 | ✖ 0</span>
+                <div id="mini-podium-list" class="hidden xl:flex items-center gap-1.5 mono-font text-[10px]"></div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LEADERBOARD MODAL -->
+    <div id="leaderboardModal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-start justify-center p-3 sm:p-4 overflow-y-auto overscroll-contain">
+        <div class="glass-panel rounded-3xl max-w-md w-full p-4 sm:p-6 border border-amber-500/30 shadow-2xl my-auto">
+            <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <i class="fa-solid fa-trophy text-amber-400 text-xl shrink-0"></i>
+                    <div class="min-w-0">
+                        <h3 id="leaderboard-title" class="text-base sm:text-lg font-bold text-white truncate">Clasificación Top 10</h3>
+                        <p id="leaderboard-subtitle" class="text-[11px] sm:text-xs text-slate-400 truncate">Los 10 Mejores Arquitectos Lógicos en 3D</p>
+                    </div>
+                </div>
+                <button onclick="toggleLeaderboardDrawer()" title="Cerrar"
+                    class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div
+                class="grid grid-cols-3 gap-2 sm:gap-3 items-end pt-5 sm:pt-6 pb-3 px-2 sm:px-3 my-3 sm:my-4 bg-slate-950/80 rounded-2xl border border-slate-800">
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-medal text-slate-300 text-lg mb-1"></i>
+                    <span id="modal-p2-name" class="text-xs font-bold text-slate-200 truncate max-w-full">---</span>
+                    <span id="modal-p2-score" class="mono-font text-[11px] text-slate-400 mb-1">0</span>
+                    <div
+                        class="w-full h-14 sm:h-16 bg-gradient-to-t from-slate-700 to-slate-400/70 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-base sm:text-lg">
+                        2°</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-crown text-amber-400 text-2xl mb-1 animate-bounce"></i>
+                    <span id="modal-p1-name" class="text-xs font-bold text-amber-300 truncate max-w-full">---</span>
+                    <span id="modal-p1-score" class="mono-font text-xs font-extrabold text-amber-400 mb-1">0</span>
+                    <div
+                        class="w-full h-20 sm:h-24 bg-gradient-to-t from-amber-600 to-amber-300 rounded-t-xl flex items-center justify-center font-extrabold text-slate-950 text-xl sm:text-2xl shadow-lg shadow-amber-500/30">
+                        1°</div>
+                </div>
+                <div class="flex flex-col items-center">
+                    <i class="fa-solid fa-medal text-amber-700 text-lg mb-1"></i>
+                    <span id="modal-p3-name" class="text-xs font-bold text-amber-500 truncate max-w-full">---</span>
+                    <span id="modal-p3-score" class="mono-font text-[11px] text-slate-400 mb-1">0</span>
+                    <div
+                        class="w-full h-10 sm:h-12 bg-gradient-to-t from-amber-900 to-amber-600/80 rounded-t-xl flex items-center justify-center font-extrabold text-white text-sm sm:text-base">
+                        3°</div>
+                </div>
+            </div>
+
+            <div id="leaderboard-time-tabs" class="hidden items-center justify-center gap-2 mb-4">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Tiempo:</span>
+                <button onclick="setLeaderboardTimeView(60)" id="lb-tab-60"
+                    class="px-3 py-1 rounded-lg text-[11px] font-bold transition text-slate-300 hover:bg-slate-800">60s</button>
+                <button onclick="setLeaderboardTimeView(120)" id="lb-tab-120"
+                    class="px-3 py-1 rounded-lg text-[11px] font-bold transition bg-cyan-500 text-slate-950">120s</button>
+                <button onclick="setLeaderboardTimeView(180)" id="lb-tab-180"
+                    class="px-3 py-1 rounded-lg text-[11px] font-bold transition text-slate-300 hover:bg-slate-800">180s</button>
+            </div>
+
+            <div id="modal-leaderboard-rows" class="space-y-2 mb-4"></div>
+
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <button onclick="savePlayerToLeaderboard()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> Registrar Mi Puntaje Actual
+                </button>
+                <button onclick="toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BIG BOTTOM-CENTER COUNTDOWN TIMER -->
+    <div id="big-timer"
+        class="fixed bottom-16 left-1/2 -translate-x-1/2 z-40 pointer-events-none flex flex-col items-center gap-1.5">
+        <div id="big-timer-pill"
+            class="flex items-center gap-2.5 bg-slate-950/85 backdrop-blur border-2 border-cyan-500/50 rounded-2xl px-5 py-1.5 shadow-2xl">
+            <i class="fa-regular fa-clock text-cyan-300 text-xl"></i>
+            <span id="big-timer-value"
+                class="mono-font text-4xl font-extrabold text-cyan-300 tabular-nums leading-none">120</span>
+            <span class="text-xs text-slate-400 font-bold self-end mb-1">s</span>
+        </div>
+        <div class="w-44 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+            <div id="big-timer-bar" class="h-full bg-cyan-400 rounded-full transition-[width] duration-1000 ease-linear"
+                style="width:100%"></div>
+        </div>
+    </div>
+
+    <!-- CROWD WARNING NOTIFICATION -->
+    <div id="crowd-warning"
+        class="fixed top-24 left-1/2 -translate-x-1/2 z-40 pointer-events-none hidden flex-col items-center gap-2">
+        <div
+            class="animate-pulse flex items-center gap-2.5 bg-red-950/90 border-2 border-red-500 rounded-2xl px-5 py-2 shadow-2xl">
+            <i class="fa-solid fa-triangle-exclamation text-red-400 text-xl"></i>
+            <span id="crowd-warning-text"
+                class="mono-font text-red-200 font-extrabold text-sm sm:text-base tracking-wide">¡ATENCIÓN! VA A PASAR GENTE</span>
+        </div>
+    </div>
+
+    <!-- SKIN ROOM (VESTIDOR) SELECTOR -->
+    <div id="skin-panel"
+        class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 hidden flex-col items-center gap-2 pointer-events-none">
+        <span
+            class="bg-slate-950/90 border-2 border-fuchsia-500/60 rounded-2xl px-4 py-1.5 text-fuchsia-200 font-bold text-sm mono-font shadow-2xl">
+            <i class="fa-solid fa-shirt mr-1"></i> Vestidor — Elige tu skin
+        </span>
+        <div class="hud-interactive flex items-center gap-2 bg-slate-950/90 border-2 border-slate-700 rounded-2xl px-3 py-2 shadow-2xl">
+            <button onclick="applyChefSkin(0)" title="Clásico"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#e5e7eb"></button>
+            <button onclick="applyChefSkin(1)" title="Rojo"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#ef4444"></button>
+            <button onclick="applyChefSkin(2)" title="Verde"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#22c55e"></button>
+            <button onclick="applyChefSkin(3)" title="Púrpura"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#a855f7"></button>
+            <button onclick="applyChefSkin(4)" title="Chef Noir"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#1e293b"></button>
+            <button onclick="applyChefSkin(5)" title="Cian"
+                class="w-9 h-9 rounded-lg border-2 border-slate-400 hover:border-white transition"
+                style="background:#06b6d4"></button>
+            <div class="w-px h-7 bg-slate-700 mx-1"></div>
+            <button id="skin-slot-67" onclick="applyChefSkin(6)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-oso" onclick="applyChefSkin(7)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-lobo" onclick="applyChefSkin(8)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-gato" onclick="applyChefSkin(9)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+            <button id="skin-slot-tung" onclick="applyChefSkin(10)" title="Bloqueada"
+                class="w-9 h-9 rounded-lg border-2 border-slate-600 transition flex items-center justify-center text-[11px]"
+                style="background:#1e293b;color:#64748b"><i class="fa-solid fa-lock"></i></button>
+        </div>
+    </div>
+
+    <!-- HUB / PATIO INTERACTION PROMPT -->
+    <div id="hub-prompt"
+        class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 pointer-events-none hidden flex-col items-center gap-2">
+        <span id="hub-prompt-text"
+            class="bg-slate-950/90 border-2 border-lime-500/60 rounded-2xl px-5 py-2 text-lime-200 font-bold text-sm sm:text-base mono-font shadow-2xl">
+            <kbd class="px-1.5 py-0.5 bg-lime-500 text-slate-950 rounded font-extrabold">E</kbd> Entrar
+        </span>
+    </div>
+
+    <!-- PRESS-ANY-KEY TO START HINT -->
+    <div id="start-hint"
+        class="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none flex flex-col items-center gap-2.5">
+        <i id="start-hint-icon" class="fa-solid fa-keyboard text-amber-300 text-4xl animate-bounce"></i>
+        <span id="start-hint-text"
+            class="animate-pulse bg-slate-950/90 border-2 border-amber-500/50 rounded-2xl px-5 py-2 text-amber-300 font-bold text-sm sm:text-base mono-font shadow-2xl">
+            Presiona cualquier tecla para comenzar
+        </span>
+    </div>
+
+    <!-- KITCHEN GAME OVER MODAL -->
+    <div id="kitchen-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-cyan-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i class="fa-solid fa-hourglass-end text-cyan-300 text-4xl mb-3"></i>
+            <h3 class="text-xl font-extrabold text-white mono-font">¡TIEMPO AGOTADO!</h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Se terminó el turno en Cocina 3D.</p>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="gameover-best" class="mono-font text-2xl font-extrabold text-cyan-300">0 pts</p>
+                </div>
+            </div>
+            <p id="gameover-msg" class="text-xs text-slate-300 mb-5">Se registró tu puntaje en el Top 10.</p>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartKitchenGame()"
+                    class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeKitchenGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Top 10
+                </button>
+                <button onclick="closeKitchenGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AIM GAME OVER MODAL -->
+    <div id="aim-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-rose-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i class="fa-solid fa-hourglass-end text-rose-300 text-4xl mb-3"></i>
+            <h3 class="text-xl font-extrabold text-white mono-font">¡TIEMPO AGOTADO!</h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Se acabó la ronda en Rayo Lógico 3D.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="aim-gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="aim-gameover-best" class="mono-font text-2xl font-extrabold text-rose-300">0 pts</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Aciertos</p>
+                    <p id="aim-gameover-hits" class="mono-font text-lg font-extrabold text-emerald-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Fallos</p>
+                    <p id="aim-gameover-misses" class="mono-font text-lg font-extrabold text-rose-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Precisión</p>
+                    <p id="aim-gameover-acc" class="mono-font text-lg font-extrabold text-cyan-300">0%</p>
+                </div>
+            </div>
+            <p id="aim-gameover-msg" class="text-xs text-slate-300 mb-5">Se registró tu puntaje en el Top 10.</p>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartAimGame()"
+                    class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeAimGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Mi Top
+                </button>
+                <button onclick="closeAimGameOver()"
+                    class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-bold text-xs">
+                    <i class="fa-solid fa-sliders mr-1"></i> Cambiar Dificultad
+                </button>
+                <button onclick="closeAimGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONNECT GAME OVER MODAL -->
+    <div id="connect-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-emerald-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i class="fa-solid fa-hourglass-end text-emerald-300 text-4xl mb-3"></i>
+            <h3 class="text-xl font-extrabold text-white mono-font">¡TIEMPO AGOTADO!</h3>
+            <p class="text-xs text-slate-400 mt-1 mb-4">Se acabó la ronda en Cables Lógicos 3D.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="connect-gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="connect-gameover-best" class="mono-font text-2xl font-extrabold text-emerald-300">0 pts</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Conexiones</p>
+                    <p id="connect-gameover-hits" class="mono-font text-lg font-extrabold text-emerald-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Errores</p>
+                    <p id="connect-gameover-misses" class="mono-font text-lg font-extrabold text-rose-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Precisión</p>
+                    <p id="connect-gameover-acc" class="mono-font text-lg font-extrabold text-cyan-300">0%</p>
+                </div>
+            </div>
+            <p id="connect-gameover-msg" class="text-xs text-slate-300 mb-5">Se registró tu puntaje en el Top 10.</p>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartConnectGame()"
+                    class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeConnectGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Mi Top
+                </button>
+                <button onclick="closeConnectGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MILLONARIO GAME OVER MODAL -->
+    <div id="million-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-yellow-500/30 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i id="million-gameover-icon" class="fa-solid fa-hourglass-end text-yellow-300 text-4xl mb-3"></i>
+            <h3 id="million-gameover-title" class="text-xl font-extrabold text-white mono-font">¡FIN DEL JUEGO!</h3>
+            <p id="million-gameover-msg" class="text-xs text-slate-400 mt-1 mb-4">Se registró tu puntaje en el Top 10.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Tu puntaje</p>
+                    <p id="million-gameover-score" class="mono-font text-2xl font-extrabold text-amber-400">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Mejor Top 10</p>
+                    <p id="million-gameover-best" class="mono-font text-2xl font-extrabold text-yellow-300">0 pts</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Acertadas</p>
+                    <p id="million-gameover-answered" class="mono-font text-lg font-extrabold text-emerald-400">0 / 15</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Premio</p>
+                    <p id="million-gameover-prize" class="mono-font text-lg font-extrabold text-yellow-300">0</p>
+                </div>
+            </div>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartMillionGame()"
+                    class="px-4 py-2 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Jugar de Nuevo
+                </button>
+                <button onclick="closeMillionGameOver(); toggleLeaderboardDrawer()"
+                    class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-trophy mr-1"></i> Ver Mi Top
+                </button>
+                <button onclick="closeMillionGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DUELO GAME OVER MODAL -->
+    <div id="duel-gameover"
+        class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-panel rounded-3xl max-w-sm w-full p-6 border border-orange-500/40 shadow-2xl text-center my-auto max-h-[92vh] overflow-y-auto">
+            <i id="duel-gameover-icon" class="fa-solid fa-trophy text-orange-300 text-4xl mb-3"></i>
+            <h3 id="duel-gameover-title" class="text-xl font-extrabold text-white mono-font">¡GANADOR!</h3>
+            <p id="duel-gameover-msg" class="text-xs text-slate-400 mt-1 mb-4">Se acabó el duelo.</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Puntos</p>
+                    <p id="duel-gameover-score" class="mono-font text-2xl font-extrabold text-orange-300">0 pts</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl px-3 py-3">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wide">Disparos</p>
+                    <p id="duel-gameover-shots" class="mono-font text-2xl font-extrabold text-rose-400">0</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Preguntas bien</p>
+                    <p id="duel-gameover-hits" class="mono-font text-lg font-extrabold text-emerald-400">0</p>
+                </div>
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-2 py-2">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wide">Vidas finales</p>
+                    <p id="duel-gameover-lives" class="mono-font text-lg font-extrabold text-sky-300">0</p>
+                </div>
+            </div>
+            <div class="flex justify-center gap-2 flex-wrap">
+                <button onclick="restartDuelGame()"
+                    class="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Revancha
+                </button>
+                <button onclick="closeDuelGameOver()"
+                    class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME SCRIPTS -->
+    <script src="src/game.js?v=94"></script>
+    <script src="src/landing.js?v=65"></script>
+    <script src="src/admin.js?v=3"></script>
+
+    <!-- MOBILE TOUCH CONTROLS -->
+    <div id="mobile-controls" class="mobile-controls">
+        <!-- Joystick flotante: se ancla donde tocas, esquina inferior izquierda -->
+        <div id="joystick-zone" class="joystick-zone">
+            <div id="joystick-base" class="joystick-base">
+                <div id="joystick-knob" class="joystick-knob"></div>
+            </div>
+        </div>
+
+        <!-- Botones de accion: esquina inferior derecha -->
+        <div class="mobile-actions">
+            <button id="mobile-interact-btn" class="mobile-btn mobile-interact" title="Interactuar">
+                <i class="fa-solid fa-hand"></i>
+            </button>
+            <button id="mobile-deliver-btn" class="mobile-btn mobile-deliver" title="Entregar">
+                <i class="fa-solid fa-check"></i>
+            </button>
+            <button id="mobile-menu-btn" class="mobile-btn mobile-menu" title="Menú">
+                <i class="fa-solid fa-house"></i>
+            </button>
+        </div>
+    </div>
+
+    <style>
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        @media (max-width: 900px), (hover: none) and (pointer: coarse) {
+            .mobile-controls {
+                display: block;
+            }
+        }
+
+        html.is-mobile .mobile-controls {
+            display: block;
+        }
+
+        /* Joystick: zona de agarre abajo-izquierda; el base flota donde tocas */
+        .joystick-zone {
+            position: absolute;
+            left: calc(0.5rem + env(safe-area-inset-left, 0px));
+            bottom: calc(4.4rem + env(safe-area-inset-bottom, 0px));
+            width: 140px;
+            height: 140px;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        .joystick-base {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 118px;
+            height: 118px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.65) 100%);
+            border: 3px solid rgba(148, 163, 184, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0.5;
+            transition: opacity 0.15s ease;
+        }
+
+        .joystick-zone.active .joystick-base {
+            opacity: 1;
+        }
+
+        .joystick-base.floating {
+            position: fixed;
+            left: 0;
+            top: 0;
+            opacity: 1;
+        }
+
+        .joystick-knob {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #f59e0b 0%, #d97706 100%);
+            border: 2px solid #fbbf24;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.6);
+            transition: transform 0.08s ease-out;
+        }
+
+        .joystick-base.floating .joystick-knob {
+            transition: none;
+        }
+
+        .mobile-actions {
+            position: absolute;
+            right: calc(0.5rem + env(safe-area-inset-right, 0px));
+            bottom: calc(4.4rem + env(safe-area-inset-bottom, 0px));
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            pointer-events: auto;
+            align-items: flex-end;
+        }
+
+        .mobile-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            border: 3px solid;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            transition: transform 0.1s ease;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-btn:active {
+            transform: scale(0.9);
+        }
+
+        .mobile-interact {
+            background: rgba(245, 158, 11, 0.95);
+            border-color: #fbbf24;
+            color: #0f172a;
+        }
+
+        .mobile-deliver {
+            background: rgba(16, 185, 129, 0.95);
+            border-color: #34d399;
+            color: #0f172a;
+            display: none;
+        }
+
+        .mobile-menu {
+            background: rgba(100, 116, 139, 0.95);
+            border-color: #94a3b8;
+            color: #e2e8f0;
+            display: flex;
+        }
+
+        /* Joystick solo en modos con movimiento WASD (patio y cocina) */
+        body.mode-aim .joystick-zone,
+        body.mode-millonario .joystick-zone,
+        body.mode-duelo .joystick-zone,
+        body.mode-connect .joystick-zone {
+            display: none !important;
+        }
+
+        /* Botones de accion segun modo */
+        body.mode-overcooked .mobile-deliver {
+            display: flex;
+        }
+
+        body.mode-aim .mobile-interact,
+        body.mode-millonario .mobile-interact,
+        body.mode-duelo .mobile-interact,
+        body.mode-connect .mobile-interact {
+            display: none !important;
+        }
+
+        body.mode-aim .mobile-deliver {
+            display: none !important;
+        }
+    </style>
+
+    <script>
+        (function () {
+            var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+            var legacyTouch = !window.matchMedia && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+            if (!coarse && !legacyTouch) return;
+
+            document.documentElement.classList.add('is-mobile');
+            document.body.classList.add('is-mobile');
+
+            var zone = document.getElementById('joystick-zone');
+            var base = document.getElementById('joystick-base');
+            var knob = document.getElementById('joystick-knob');
+            var interactBtn = document.getElementById('mobile-interact-btn');
+            var deliverBtn = document.getElementById('mobile-deliver-btn');
+            var menuBtn = document.getElementById('mobile-menu-btn');
+
+            window.mobileMove = window.mobileMove || { x: 0, y: 0 };
+
+            var RADIUS = 42;
+            var DEADZONE = 0.3;
+            var activeId = null;
+            var originX = 0, originY = 0;
+
+            function setKeys(mx, my) {
+                window.mobileMove.x = mx;
+                window.mobileMove.y = my;
+                var ck = window.chefKeys;
+                if (ck) {
+                    ck.w = my < -DEADZONE;
+                    ck.s = my > DEADZONE;
+                    ck.a = mx < -DEADZONE;
+                    ck.d = mx > DEADZONE;
+                }
+            }
+
+            function onMove(px, py) {
+                var dx = px - originX, dy = py - originY;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > RADIUS) { dx = dx / dist * RADIUS; dy = dy / dist * RADIUS; }
+                if (knob) knob.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
+                setKeys(dx / RADIUS, dy / RADIUS);
+            }
+
+            function resetJoystick() {
+                if (activeId === null) return;
+                activeId = null;
+                if (zone) zone.classList.remove('active');
+                if (base) base.classList.remove('floating');
+                if (knob) knob.style.transform = 'translate(0px, 0px)';
+                setKeys(0, 0);
+            }
+
+            if (zone) {
+                zone.addEventListener('pointerdown', function (e) {
+                    if (activeId !== null) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    activeId = e.pointerId;
+                    originX = e.clientX;
+                    originY = e.clientY;
+                    zone.classList.add('active');
+                    if (base) {
+                        base.classList.add('floating');
+                        base.style.left = originX + 'px';
+                        base.style.top = originY + 'px';
+                    }
+                    if (knob) knob.style.transform = 'translate(0px, 0px)';
+                    try { zone.setPointerCapture(e.pointerId); } catch (err) { }
+                });
+
+                zone.addEventListener('pointermove', function (e) {
+                    if (e.pointerId !== activeId) return;
+                    e.preventDefault();
+                    onMove(e.clientX, e.clientY);
+                });
+
+                var endHandler = function (e) {
+                    if (e.pointerId !== activeId) return;
+                    resetJoystick();
+                };
+                zone.addEventListener('pointerup', endHandler);
+                zone.addEventListener('pointercancel', endHandler);
+                zone.addEventListener('lostpointercapture', endHandler);
+            }
+
+            function bindTap(btn, fn) {
+                if (!btn) return;
+                btn.addEventListener('pointerdown', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    fn();
+                });
+            }
+
+            bindTap(interactBtn, function () {
+                var mode = window.currentMode;
+                if (mode === 'overcooked' && typeof interactWithNearestStation === 'function') {
+                    interactWithNearestStation();
+                } else if (mode === 'hub' && typeof interactHubStation === 'function') {
+                    interactHubStation();
+                }
+            });
+
+            bindTap(deliverBtn, function () {
+                if (window.currentMode === 'overcooked' && typeof deliverKitchenOrder === 'function') {
+                    deliverKitchenOrder();
+                }
+            });
+
+            bindTap(menuBtn, function () {
+                if (typeof backToMenu === 'function') backToMenu();
+            });
+        })();
+    </script>
+
+    <!-- OFFLINE / PWA: registra el service worker para jugar sin conexion -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function (err) {
+                    console.warn('No se pudo registrar el service worker:', err);
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
